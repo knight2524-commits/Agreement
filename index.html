@@ -51,6 +51,8 @@
         tr:hover { background-color: #f1f8e9; }
         
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        /* 삭제 확인 팝업은 추가 팝업보다 위에 표시 */
+        #itemDeleteConfirmModal { z-index: 2000; }
         .modal-content { background: white; padding: 25px; border-radius: 8px; width: 450px; display: flex; flex-direction: column; gap: 12px; position: relative; }
 
         /* 관리자 항목 삭제 목록 */
@@ -274,12 +276,28 @@
 
 <script>
     let masterData = { customer: [], period: [], designated: [], excluded: [], manager: [], bizNo: [], clientRep: [], clientAddr: [], evalPeriod: [], tier: {} };
+
+    // 기본 양식 데이터 (2026년) - 페이지 로드시 자동 적용
+    const DEFAULT_DATA = {"master":{"customer":[],"period":["2026년 [하반기]"],"designated":["KEIBA","KDS","EBISU","SHINWA","MOKUBA"],"excluded":[],"manager":["최재환 부장","정재욱 차장","김석주 과장","변기훈 과장","박갑열 과장","박영진 과장","이영진 과장","이창문 과장","이승엽 부장","정재훈 차장","남기원 차장","남상협 차장","김성진 차장","송형섭 과장"],"bizNo":[],"clientRep":[],"clientAddr":[],"evalPeriod":["분기(3개월)","월간(1개월)"],"tier":{"S(+)":{"amount":"50000000","discount":"20"},"S":{"amount":"30000000","discount":"12"},"A":{"amount":"20000000","discount":"8"}}},"rows":[]};
     let selectedDesignated = [], selectedExcluded = [], isLoggedIn = false, currentModalTarget = '';
     let pendingDelete = { isTier: false, target: null, index: null, key: null };
     let currentSignatureData = ''; 
 
     // 초기 실행
-    window.onload = function() { updateAuthUI(); };
+    window.onload = function() { applyDefaultData(); updateAuthUI(); };
+
+    // 기본 양식 데이터를 화면에 반영 (master + rows)
+    function applyDefaultData() {
+        masterData = JSON.parse(JSON.stringify(DEFAULT_DATA.master));
+        updateAllSelects();
+        const tbody = document.getElementById('tableBody'); tbody.innerHTML = '';
+        (DEFAULT_DATA.rows || []).forEach(r => {
+            const row = tbody.insertRow();
+            row.setAttribute('data-raw-amt', r.rawAmt); row.setAttribute('data-notes', r.notes); row.setAttribute('data-sig', r.sig);
+            row.ondblclick = function() { showDetailPopup(this); };
+            row.innerHTML = `<td><input type="radio" name="rowSelect"></td><td>${r.cells[1]}</td><td>${r.cells[2]}</td><td>${r.cells[3]}</td><td>${r.cells[4]}</td><td>${r.cells[5]}</td><td>${r.cells[6]}</td><td>${r.cells[7]}</td><td>${r.cells[8]}</td><td>${r.cells[9]}</td><td>${r.cells[10]}</td><td>${r.cells[11]}</td><td>${r.cells[12]}</td>`;
+        });
+    }
 
     function formatNumber(num) { if(!num) return ""; return num.toString().replace(/[^0-9]/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
     function unformatNumber(str) { if(!str) return ""; return str.toString().replace(/,/g, ''); }
