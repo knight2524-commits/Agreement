@@ -86,6 +86,14 @@
         }
 
         .table-scroll { width: 100%; }
+        .manage-list { display: none; max-height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 6px; margin-top: 8px; }
+        .manage-list .mm-head { font-size: 12px; font-weight: bold; color: #666; padding: 8px 10px; background: #f4f4f4; position: sticky; top: 0; border-bottom: 1px solid #e0e0e0; }
+        .manage-list .mm-empty { font-size: 12px; color: #aaa; padding: 12px 10px; text-align: center; }
+        .manage-list .mm-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; border-bottom: 1px solid #f0f0f0; }
+        .manage-list .mm-row:last-child { border-bottom: none; }
+        .manage-list .mm-row span { font-size: 13px; word-break: break-all; padding-right: 8px; }
+        .manage-list .mm-del { background: #d32f2f; color: #fff; border: none; border-radius: 4px; width: 26px; height: 26px; min-width: 26px; cursor: pointer; font-weight: bold; font-size: 15px; line-height: 1; flex-shrink: 0; }
+        .manage-list .mm-del:hover { background: #b71c1c; }
         .settings-bar { display:flex; align-items:center; gap:8px; margin-top:10px; flex-wrap:wrap; }
         .settings-bar .sbtn { width:auto; padding:0 14px; height:34px; font-size:12px; font-weight:bold; border:none; border-radius:5px; cursor:pointer; color:#fff; }
 
@@ -309,7 +317,7 @@
 
 <div id="deleteConfirmModal" class="modal-overlay"><div class="modal-content" style="width:340px; text-align:center;"><h3>삭제 확인</h3><p>선택하신 내역을 정말로 삭제하시겠습니까?</p><div style="display:flex; gap:10px; justify-content:center;"><button onclick="closeModal('deleteConfirmModal')" style="padding:8px 20px; background:#757575; color:white; border:none; border-radius:5px;">닫기</button><button onclick="deleteSelectedRow()" style="padding:8px 20px; background:#d32f2f; color:white; border:none; border-radius:5px;">삭제</button></div></div></div>
 <div id="sigModal" class="modal-overlay"><div class="modal-content" style="width:410px; text-align:center;"><h3>✍️ 서명 패드</h3><canvas id="sigCanvas" width="360" height="180"></canvas><div style="display:flex; gap:10px; justify-content:center; margin-top:10px;"><button onclick="clearSigCanvas()" style="padding:8px 15px; background:#ef5350; color:white; border:none; border-radius:5px;">지우기</button><button onclick="closeModal('sigModal')" style="padding:8px 15px; background:#78909c; color:white; border:none; border-radius:5px;">취소</button><button onclick="saveSignature()" style="padding:8px 15px; background:#2e7d32; color:white; border:none; border-radius:5px;">완료</button></div></div></div>
-<div id="baseModal" class="modal-overlay"><div class="modal-content"><h3 id="baseModalTitle">항목 추가</h3><input type="text" id="baseModalInput"><div style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;"><button onclick="closeModal('baseModal')">취소</button><button onclick="saveBaseModal()" style="background:#2e7d32; color:white; border:none; padding:8px 15px; border-radius:5px;">저장</button></div></div></div>
+<div id="baseModal" class="modal-overlay"><div class="modal-content"><h3 id="baseModalTitle">항목 추가</h3><input type="text" id="baseModalInput"><div id="baseModalList" class="manage-list"></div><div style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;"><button onclick="closeModal('baseModal')">취소</button><button onclick="saveBaseModal()" style="background:#2e7d32; color:white; border:none; padding:8px 15px; border-radius:5px;">저장</button></div></div></div>
 <div id="tierModal" class="modal-overlay"><div class="modal-content"><h3>약정구간 설정</h3><input type="text" id="newTierName" placeholder="구간명"><input type="text" id="newTierAmount" placeholder="금액" oninput="this.value = formatNumber(unformatNumber(this.value))"><input type="text" id="newTierDiscount" placeholder="할인율 (%)"><div style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;"><button onclick="closeModal('tierModal')">취소</button><button onclick="saveTierModal()" style="background:#2e7d32; color:white; border:none; padding:8px 15px; border-radius:5px;">저장</button></div></div></div>
 
 <script>
@@ -386,13 +394,33 @@
     
     function updateAuthUI() {
         document.querySelectorAll('.admin-plus').forEach(btn => btn.style.display = isLoggedIn ? 'inline-block' : 'none');
+        if (document.getElementById('baseModal').style.display === 'flex') renderBaseModalList();
     }
 
     function openBaseModal(target, title) {
         currentModalTarget = target;
         document.getElementById('baseModalTitle').innerText = `[${title}] 추가`;
         document.getElementById('baseModalInput').value = '';
+        renderBaseModalList();
         document.getElementById('baseModal').style.display = 'flex';
+    }
+    function baseSelectId(target){ if(target==='designated') return 'designatedSelect'; if(target==='excluded') return 'excludedSelect'; return target; }
+    function renderBaseModalList() {
+        const d = document.getElementById('baseModalList');
+        if (!isLoggedIn) { d.style.display = 'none'; d.innerHTML = ''; return; }   // 관리자만 삭제 가능
+        d.style.display = 'block';
+        const items = masterData[currentModalTarget] || [];
+        if (!items.length) { d.innerHTML = '<div class="mm-empty">등록된 항목이 없습니다.</div>'; return; }
+        d.innerHTML = '<div class="mm-head">등록 항목 (× 클릭 시 삭제)</div>' + items.map((v,i)=>`<div class="mm-row"><span></span><button class="mm-del" data-i="${i}">×</button></div>`).join('');
+        const rows = d.querySelectorAll('.mm-row'); items.forEach((v,i)=>rows[i].querySelector('span').textContent = v);
+        d.querySelectorAll('.mm-del').forEach(b=>b.onclick=()=>deleteMasterItem(currentModalTarget, parseInt(b.dataset.i)));
+    }
+    function deleteMasterItem(target, index) {
+        const items = masterData[target] || []; const name = items[index];
+        if (!confirm(`'${name}' 항목을 삭제하시겠습니까?`)) return;
+        items.splice(index, 1);
+        updateAllSelects();
+        renderBaseModalList();
     }
 
     function openTierModal() {
