@@ -2,6 +2,14 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#2e7d32">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="약정 시스템">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-180.png">
     <title>(주)KB-ONE 수입공구 약정 시스템</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -76,6 +84,39 @@
             .pdf-modal-content { box-shadow: none; width: 100%; height: 100%; max-height: none; overflow: visible; padding: 15mm 15mm; }
             .contract-paper { scale: 95%; transform-origin: top center; }
         }
+
+        .table-scroll { width: 100%; }
+        .settings-bar { display:flex; align-items:center; gap:8px; margin-top:10px; flex-wrap:wrap; }
+        .settings-bar .sbtn { width:auto; padding:0 14px; height:34px; font-size:12px; font-weight:bold; border:none; border-radius:5px; cursor:pointer; color:#fff; }
+
+        /* ===== 스마트폰 전용 반응형 (<=680px) ===== */
+        @media (max-width: 680px) {
+            body { padding: 8px; -webkit-text-size-adjust: 100%; }
+            .container { padding: 12px; border-radius: 0; box-shadow: none; max-width: 100%; }
+            .header-rates { flex-direction: column; align-items: flex-start; gap: 8px; font-size: 14px; padding: 10px 12px; margin-bottom: 16px; }
+            .login-area { width: 100%; justify-content: space-between; }
+            .panels { flex-direction: column; gap: 14px; }
+            .left-panel { gap: 14px; }
+            .right-panel { max-width: 100%; }
+            .right-panel textarea { min-height: 80px; }
+            .form-row { flex-direction: column; gap: 14px; }
+            .input-group { flex-direction: column; align-items: stretch; gap: 5px; }
+            .input-group > label { min-width: 0; text-align: left; font-size: 12.5px; color: #2e7d32; }
+            .input-wrapper select, .input-wrapper input { height: 46px; font-size: 16px; } /* iOS 자동확대 방지 */
+            .admin-plus, .public-plus { width: 46px; height: 46px; font-size: 20px; }
+            .brand-display-area { flex-direction: column; gap: 12px; }
+            .btn-action { padding: 16px; font-size: 16px; }
+            .btn-sig-open { height: 46px; font-size: 15px; }
+            .sig-preview-box { height: 56px; }
+            .btn-action-group { flex-wrap: wrap; gap: 8px; }
+            .btn-action-group > * { flex: 1 1 46% !important; min-height: 48px; line-height: 36px !important; font-size: 13px; box-sizing: border-box; }
+            .settings-bar .sbtn { flex: 1 1 46%; min-height: 46px; }
+            .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid #eee; border-radius: 6px; }
+            #dataTable { min-width: 1000px; }
+            .modal-content { width: 92vw; max-width: 92vw; }
+            #sigCanvas { width: 100%; height: 170px; }
+            .pdf-modal-content { width: 96vw; padding: 16px; }
+        }
     </style>
 </head>
 <body>
@@ -97,7 +138,7 @@
                     <label>공급받는자</label>
                     <div class="input-wrapper">
                         <select id="customer"><option value="">선택하세요</option></select>
-                        <button class="admin-plus" onclick="openBaseModal('customer', '업체명')">+</button>
+                        <button class="public-plus" onclick="openBaseModal('customer', '업체명')">+</button>
                     </div>
                 </div>
                 <div class="input-group">
@@ -216,6 +257,14 @@
         </label>
     </div>
 
+    <div class="settings-bar">
+        <button class="admin-plus sbtn" onclick="publishSettings()" style="background:#6a1b9a;">⬇ 설정 내보내기(배포용)</button>
+        <button class="admin-plus sbtn" onclick="restoreDefaults()" style="background:#90a4ae;">기본값 복원</button>
+        <button class="sbtn" onclick="refreshSettings()" style="background:#0288d1;">🔄 서버 새로고침</button>
+        <span id="policyStatus" style="font-size:11.5px; color:#777;">정책 적용: 기본값</span>
+    </div>
+
+    <div class="table-scroll">
     <table id="dataTable">
         <thead>
             <tr>
@@ -224,6 +273,7 @@
         </thead>
         <tbody id="tableBody"></tbody>
     </table>
+    </div>
 </div>
 
 <!-- PDF 정식 규격 약정서 팝업창 -->
@@ -272,15 +322,52 @@
     window.onload = function() { 
         updateAllSelects();
         updateAuthUI(); 
+        loadSettings(true);
     };
+
+    /* ===== 중앙 설정: 호스팅 JSON 자동 불러오기 + localStorage 캐시 =====
+       배포: 관리자가 [⬇ 설정 내보내기]로 settings.json 을 받아 호스팅(앱과 같은 폴더)에 올리면 = "배포".
+       모든 앱은 실행 시 SETTINGS_URL(비우면 같은 폴더 settings.json)을 자동으로 읽어 마스터(약정구간·브랜드·거래처·담당자 등)에 반영.
+       중앙설정은 '마스터'만 동기화하며, 작성중인 표 데이터는 건드리지 않습니다. */
+    const SETTINGS_URL = "";    // 예: "https://kb1-yakjeong.vercel.app/settings.json"
+    const SETTINGS_KEY = 'kb1_yakjeong_settings';
+    function settingsEndpoint(){ return (SETTINGS_URL || 'settings.json') + '?_=' + Date.now(); }
+    function collectSettings(){ return { master: masterData, updatedAt: Date.now(), by: '석정주 과장' }; }
+    function applySettings(s){
+        if(!s || !s.master) return;
+        masterData = s.master; updateAllSelects();
+        if(s.updatedAt){ try{ document.getElementById('policyStatus').innerText = `정책 적용: ${new Date(s.updatedAt).toLocaleString('ko-KR')} (${s.by||'-'})`; }catch(e){} }
+    }
+    function saveLocal(s){ try{ localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); }catch(e){} }
+    function loadLocal(){ try{ const v=localStorage.getItem(SETTINGS_KEY); return v?JSON.parse(v):null; }catch(e){ return null; } }
+    function loadSettings(silent){
+        const cached=loadLocal(); if(cached) applySettings(cached);
+        fetch(settingsEndpoint(), {cache:'no-store'})
+            .then(r=>{ if(!r.ok) throw 0; return r.json(); })
+            .then(s=>{ const local=loadLocal(); if(!local || !local.updatedAt || (s.updatedAt||0) >= local.updatedAt){ applySettings(s); saveLocal(s); } if(!silent) alert('서버 최신 설정을 불러왔습니다.'); })
+            .catch(()=>{ if(!silent) alert('서버 설정을 불러오지 못했습니다. (캐시/기본값 사용)'); });
+    }
+    function refreshSettings(){ loadSettings(false); }
+    function publishSettings(){
+        if(!isLoggedIn) return alert('관리자만 내보낼 수 있습니다.');
+        const s=collectSettings(); saveLocal(s); applySettings(s);
+        const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(s,null,2)],{type:'application/json'})); a.download='settings.json'; a.click();
+        alert('settings.json 을 받았습니다.\n이 파일을 호스팅(앱과 같은 폴더)에 올리면, 현장 앱이 다음 실행 때 자동 반영됩니다.');
+    }
+    function restoreDefaults(){
+        if(!confirm('내장 기본값으로 되돌릴까요? (이 기기 저장분 삭제)')) return;
+        try{ localStorage.removeItem(SETTINGS_KEY); }catch(e){}
+        masterData = JSON.parse(JSON.stringify(DEFAULT_DATA.master)); updateAllSelects();
+        document.getElementById('policyStatus').innerText='정책 적용: 기본값';
+    }
 
     function formatNumber(num) { if(!num) return ""; return num.toString().replace(/[^0-9]/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
     function unformatNumber(str) { if(!str) return ""; return str.toString().replace(/,/g, ''); }
 
     const canvas = document.getElementById('sigCanvas'); const ctx = canvas.getContext('2d'); let isDrawing = false;
     ctx.lineWidth = 3; ctx.strokeStyle = '#000000'; ctx.lineCap = 'round';
-    function getTouchPos(e) { const rect = canvas.getBoundingClientRect(); return { x: (e.touches[0].clientX - rect.left), y: (e.touches[0].clientY - rect.top) }; }
-    function getMousePos(e) { const rect = canvas.getBoundingClientRect(); return { x: (e.clientX - rect.left), y: (e.clientY - rect.top) }; }
+    function getTouchPos(e) { const rect = canvas.getBoundingClientRect(); return { x: (e.touches[0].clientX - rect.left)*(canvas.width/rect.width), y: (e.touches[0].clientY - rect.top)*(canvas.height/rect.height) }; }
+    function getMousePos(e) { const rect = canvas.getBoundingClientRect(); return { x: (e.clientX - rect.left)*(canvas.width/rect.width), y: (e.clientY - rect.top)*(canvas.height/rect.height) }; }
     canvas.addEventListener('mousedown', (e) => { isDrawing = true; const p = getMousePos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); });
     canvas.addEventListener('mousemove', (e) => { if(!isDrawing) return; const p = getMousePos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); });
     canvas.addEventListener('mouseup', () => isDrawing = false);
@@ -444,6 +531,9 @@
         const tierSel = document.getElementById('tier');
         tierSel.innerHTML = `<option value="">구간 선택</option>` + Object.keys(masterData.tier).map(k => `<option value="${k}">${k}</option>`).join('');
     }
+
+    /* PWA: 서비스워커 등록 (오프라인) */
+    if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
 </script>
 </body>
 </html>
