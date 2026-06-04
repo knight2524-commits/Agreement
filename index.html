@@ -21,10 +21,9 @@
         .input-wrapper { display: flex; flex: 1; gap: 5px; align-items: center; }
         .input-wrapper select, .input-wrapper input { flex: 1; width: 100%; font-size: 14px; padding: 8px 10px; border: 1px solid #ccc; border-radius: 5px; height: 38px; box-sizing: border-box; outline: none; }
         
-        /* 버튼 스타일 */
-        .btn-plus { display: none; width: 35px; font-weight: bold; font-size: 18px; cursor: pointer; background: #e0e0e0; border: none; border-radius: 5px; height: 38px; flex-shrink: 0; }
-        .btn-public-plus { display: inline-block !important; width: 35px; font-weight: bold; font-size: 18px; cursor: pointer; background: #cfd8dc; border: none; border-radius: 5px; height: 38px; flex-shrink: 0; }
-        .btn-public-plus:hover { background: #b0bec5; }
+        .admin-plus { display: none; width: 35px; font-weight: bold; font-size: 18px; cursor: pointer; background: #e0e0e0; border: none; border-radius: 5px; height: 38px; flex-shrink: 0; }
+        .public-plus { display: inline-block !important; width: 35px; font-weight: bold; font-size: 18px; cursor: pointer; background: #cfd8dc; border: none; border-radius: 5px; height: 38px; flex-shrink: 0; }
+        .public-plus:hover { background: #b0bec5; }
         
         .btn-sig-open { width: 100%; background: #0288d1; color: white; border: none; border-radius: 5px; height: 38px; font-weight: bold; cursor: pointer; font-size: 13px; }
         .sig-preview-box { width: 100%; height: 38px; border: 1px solid #ccc; border-radius: 5px; background: #fafafa; display: flex; align-items: center; justify-content: center; overflow: hidden; }
@@ -51,21 +50,8 @@
         tr:hover { background-color: #f1f8e9; }
         
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
-        /* 삭제 확인 팝업은 추가 팝업보다 위에 표시 */
-        #itemDeleteConfirmModal { z-index: 2000; }
         .modal-content { background: white; padding: 25px; border-radius: 8px; width: 450px; display: flex; flex-direction: column; gap: 12px; position: relative; }
-
-        /* 관리자 항목 삭제 목록 */
-        .manage-list { display: none; max-height: 220px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 6px; margin-top: 5px; }
-        .manage-list .mm-head { font-size: 12px; font-weight: bold; color: #666; padding: 8px 10px; background: #f4f4f4; position: sticky; top: 0; border-bottom: 1px solid #e0e0e0; }
-        .manage-list .mm-empty { font-size: 12px; color: #aaa; padding: 12px 10px; text-align: center; }
-        .manage-list .mm-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; border-bottom: 1px solid #f0f0f0; }
-        .manage-list .mm-row:last-child { border-bottom: none; }
-        .manage-list .mm-row span { font-size: 13px; word-break: break-all; padding-right: 8px; }
-        .manage-list .mm-del { background: #d32f2f; color: #fff; border: none; border-radius: 4px; width: 26px; height: 26px; min-width: 26px; cursor: pointer; font-weight: bold; font-size: 15px; line-height: 1; flex-shrink: 0; }
-        .manage-list .mm-del:hover { background: #b71c1c; }
         
-        /* 💡 팝업창 세로 크기 확대 및 PDF 최적화 유닛 */
         .pdf-modal-content { width: 820px; height: 95vh; overflow-y: auto; background: #fff; padding: 25px 40px; border-radius: 8px; box-shadow: 0 5px 25px rgba(0,0,0,0.3); position: relative; }
         .contract-paper { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; color: #000; line-height: 1.5; padding: 10px; }
         .contract-title { text-align: center; font-size: 23px; font-weight: bold; letter-spacing: 5px; margin-bottom: 20px; text-decoration: underline; text-underline-position: under; }
@@ -96,13 +82,14 @@
 
 <div class="container">
     <div class="header-rates">
-        <span style="color: #2e7d32;">📋 (주)KB-ONE 수입공구 약정 시스템 </span>
+        <span>(주)KB-ONE 수입공구 약정 시스템</span>
         <div class="login-area">
             <span id="adminTitle" style="font-weight: normal; font-size: 14px;">관리자: 석정주 과장</span>
             <button id="loginBtn" class="btn-login" onclick="toggleLogin()">로그인</button>
         </div>
     </div>
 
+    <!-- 입력 패널 -->
     <div class="panels">
         <div class="left-panel">
             <div class="form-row">
@@ -110,14 +97,14 @@
                     <label>공급받는자</label>
                     <div class="input-wrapper">
                         <select id="customer"><option value="">선택하세요</option></select>
-                        <button class="btn-public-plus" id="btn-customer" onclick="openBaseModal('customer', '업체명')">+</button>
+                        <button class="admin-plus" onclick="openBaseModal('customer', '업체명')">+</button>
                     </div>
                 </div>
                 <div class="input-group">
                     <label>약정기간</label>
                     <div class="input-wrapper">
                         <select id="period"><option value="">선택하세요</option></select>
-                        <button class="btn-plus" id="btn-period" onclick="openBaseModal('period', '기간')">+</button>
+                        <button class="admin-plus" onclick="openBaseModal('period', '기간')">+</button>
                     </div>
                 </div>
             </div>
@@ -126,14 +113,14 @@
                     <label>약정구간</label>
                     <div class="input-wrapper">
                         <select id="tier" onchange="applyTierData()"><option value="">선택하세요</option></select>
-                        <button class="btn-plus" id="btn-tier" onclick="openTierModal()">+</button>
+                        <button class="admin-plus" onclick="openTierModal()">+</button>
                     </div>
                 </div>
                 <div class="input-group">
                     <label>지정브랜드</label>
                     <div class="input-wrapper">
                         <select id="designatedSelect" onchange="addTag('designated')"><option value="">브랜드 선택</option></select>
-                        <button class="btn-plus" id="btn-designated" onclick="openBaseModal('designated', '지정브랜드')">+</button>
+                        <button class="admin-plus" onclick="openBaseModal('designated', '지정브랜드')">+</button>
                     </div>
                 </div>
             </div>
@@ -146,7 +133,7 @@
                     <label>제외브랜드</label>
                     <div class="input-wrapper">
                         <select id="excludedSelect" onchange="addTag('excluded')"><option value="">브랜드 선택</option></select>
-                        <button class="btn-plus" id="btn-excluded" onclick="openBaseModal('excluded', '제외브랜드')">+</button>
+                        <button class="admin-plus" onclick="openBaseModal('excluded', '제외브랜드')">+</button>
                     </div>
                 </div>
             </div>
@@ -159,7 +146,7 @@
                     <label>평가기간</label>
                     <div class="input-wrapper">
                         <select id="evalPeriod"><option value="">선택하세요</option></select>
-                        <button class="btn-plus" id="btn-eval" onclick="openBaseModal('evalPeriod', '평가기간')">+</button>
+                        <button class="admin-plus" onclick="openBaseModal('evalPeriod', '평가기간')">+</button>
                     </div>
                 </div>
             </div>
@@ -168,14 +155,14 @@
                     <label>사업자번호</label>
                     <div class="input-wrapper">
                         <select id="bizNo"><option value="">선택하세요</option></select>
-                        <button class="btn-public-plus" onclick="openBaseModal('bizNo', '사업자번호')">+</button>
+                        <button class="public-plus" onclick="openBaseModal('bizNo', '사업자번호')">+</button>
                     </div>
                 </div>
                 <div class="input-group">
                     <label>담당자</label>
                     <div class="input-wrapper">
                         <select id="manager"><option value="">담당자 선택</option></select>
-                        <button class="btn-plus" id="btn-manager" onclick="openBaseModal('manager', '담당자')">+</button>
+                        <button class="admin-plus" onclick="openBaseModal('manager', '담당자')">+</button>
                     </div>
                 </div>
             </div>
@@ -184,14 +171,14 @@
                     <label>주소(을)</label>
                     <div class="input-wrapper">
                         <select id="clientAddr"><option value="">선택하세요</option></select>
-                        <button class="btn-public-plus" onclick="openBaseModal('clientAddr', '주소')">+</button>
+                        <button class="public-plus" onclick="openBaseModal('clientAddr', '주소')">+</button>
                     </div>
                 </div>
                 <div class="input-group">
                     <label>대표자(을)</label>
                     <div class="input-wrapper">
                         <select id="clientRep"><option value="">선택하세요</option></select>
-                        <button class="btn-public-plus" onclick="openBaseModal('clientRep', '대표자')">+</button>
+                        <button class="public-plus" onclick="openBaseModal('clientRep', '대표자')">+</button>
                     </div>
                 </div>
             </div>
@@ -218,8 +205,9 @@
         <div class="right-panel"><label>특이사항 (비고란)</label><textarea id="notes" placeholder="기타 협의 사항을 기입하세요."></textarea></div>
     </div>
 
+    <!-- 하단 제어부 -->
     <div class="btn-action-group">
-        <button class="btn-login" style="background:#d32f2f; flex:1;" onclick="openDeleteModal()">선택삭제</button>
+        <button class="btn-login" style="background:#d32f2f; flex:1;" onclick="openModal('deleteConfirmModal')">선택삭제</button>
         <button class="btn-login" style="background:#1976D2; flex:1;" onclick="openPdfContractPopup()">약정서</button>
         <button class="btn-login" style="background:#FF9800; flex:1;" onclick="saveAsJson()">양식저장</button>
         <label class="btn-login" style="flex:1; text-align:center; background:#455A64; line-height:30px;">
@@ -238,14 +226,15 @@
     </table>
 </div>
 
+<!-- PDF 정식 규격 약정서 팝업창 -->
 <div id="pdfDocumentOverlay" class="modal-overlay">
     <div class="pdf-modal-content">
         <div id="pdfPrintArea" class="contract-paper">
-            <div class="contract-title">작업수입 공급 약 정 서</div>
+            <div class="contract-title">작 업 수 입 공 공급 약 정 서</div>
             <div class="contract-parties-top">공급자: (주)KB-ONE (이하 "갑"이라 한다)<br>공급받는자: <span id="pdfCustName"></span> (이하 "을"이라 한다)</div>
-            <div class="contract-body">주식회사 KB-ONE(이하 "갑")과 공급받는자(이하 "을")는 수입작업공구 공급 거래와 관련하여 상호 신뢰를 바탕으로 다음과 같이 공급 약정을 체결한다.<br><br><strong>제 1 조 (목적)</strong><br> 본 약정서는 "갑"이 수입하여 공급하는 제품을 "을"에게 안정적으로 공급하고, "을"은 약정 조건을 준수함으로써 상호 이익을 증진시키는 데 그 목적이 있다.<br><br><strong>제 2 조 (약정 조건 및 공급 혜택)</strong><br>1. 약정기간 동안 "을"의 총 매입 목표금액 및 할인율은 아래 표의 기준을 적용한다.<br>2. "을"이 지정된 약정 브랜드 발주진행시, "갑"은 합의된 할인율(%)을 적용 출고를 진행한다.<br>3. "을"이 지정된 약정 목표를 미달성시, "갑"은 합의된 할인율(%)을 할증적용 한다.</div>
+            <div class="contract-body">주식회사 KB-ONE(이하 "갑")과 공급받는자(이하 "을")는 수입작업공구 공급 거래와 관련하여 상호 신뢰를 바탕으로 다음과 같이 공급 약정을 체결한다.<br><br><strong>제 1 조 (목적)</strong> 본 약정서는 "갑"이 수입하여 공급하는 제품을 "을"에게 안정적으로 공급하고, "을"은 약정 조건을 준수함으로써 상호 이익을 증진시키는 데 그 목적이 있다.<br><br><strong>제 2 조 (약정 조건 및 공급 혜택)</strong><br>1. 약정기간 동안 "을"의 총 매입 목표금액 및 할인율은 아래 표의 기준을 적용한다.<br>2. "을"이 지정된 약정 브랜드 발주진행시, "갑"은 합의된 할인율(%)을 적용 출고를 진행한다.<br>3. "을"이 지정된 약정 목표를 미달성시, "갑"은 합의된 할인율(%)을 할증적용 한다.</div>
             <table class="contract-table"><thead><tr><th>약정기간</th><th>평가기간</th><th>약정구간</th><th>약정금액(원)</th><th>약정 할인율</th></tr></thead><tbody><tr><td id="pdfPeriod"></td><td id="pdfEvalPeriod"></td><td id="pdfTier"></td><td id="pdfAmount" style="font-weight: bold;"></td><td id="pdfDiscount" style="font-weight: bold; color: #1976D2;"></td></tr></tbody></table>
-            <div class="contract-body" style="text-align: justify;"><strong>제 3 조 (가격인상 및 출고조정)</strong><br>1. 가격인상적용시 인상적용 요율을 동일하게 적용진행한다.<br>2. 갑의 해당 브랜드의 공급사 사정으로 인한 적정 재고 보유량의 문제상황 발생시 상호간의 협의하에 약정달성기간의 유예설정가능하다<br>(단,을의 일방적인 요청으로 미달성진행시 2조3항을 적용 할인된 출고분을 할정적용한다)<br><br><strong>제 4 조 (브랜드 취급 범위)</strong><br>1. <strong>지정 브랜드:</strong> <span id="pdfDesignated" style="color:#1976D2;"></span> / 2. <strong>제외 브랜드:</strong> <span id="pdfExcluded" style="color:#d32f2f;"></span><br><br><strong>제 5 조 (기타 및 특약사항)</strong><br><div id="pdfNotes" style="min-height: 40px; background: #fafafa; padding: 8px; border: 1px solid #ddd; white-space: pre-wrap; font-size:12px;"></div></div>
+            <div class="contract-body" style="text-align: justify;"><strong>제 3 조 (가격인상 및 출고조정)</strong><br>1. 가격인상적용시 인상적용 요율을 동일하게 적용진행한다.<br>2. 갑의 해당 브랜드의 공급사 사정으로 인한 적정 재고 보유량의 문제상황 발생시 상호간의 협의하에 약정달성기간의 유예설정가능하다(단,을의 일방적인 요청으로 미달성진행시 2조3항을 적용 할인된 출고분을 할정적용한다)<br><br><strong>제 4 조 (브랜드 취급 범위)</strong><br>1. <strong>지정 브랜드:</strong> <span id="pdfDesignated" style="color:#1976D2;"></span> / 2. <strong>제외 브랜드:</strong> <span id="pdfExcluded" style="color:#d32f2f;"></span><br><br><strong>제 5 조 (기타 및 특약사항)</strong><br><div id="pdfNotes" style="min-height: 40px; background: #fafafa; padding: 8px; border: 1px solid #ddd; white-space: pre-wrap; font-size:12px;"></div></div>
             <div class="contract-sign-zone"><div class="sign-block"><strong>공급자 ("갑")</strong><br>회사명: (주)케이비원 / 사업자 등록번호: 504-81-15357<br>주소: 대구광역시 중구 서야동 99-1<br>업종: 도,소매 / 업태: 일반철물 및 수공구<br>대표자: 김정도 (인)</div><div class="sign-block" style="text-align: right;"><strong>공급받는자 ("을")</strong><br>회사명: <span id="pdfSignCustName"></span> / 사업자번호: <span id="pdfSignBizNo"></span><br>주소: <span id="pdfSignAddr"></span><br>대표자: <span id="pdfSignRepName" style="font-weight:bold;"></span> <span id="pdfSigImgWrap" class="inline-sig-wrap"></span>(인)</div></div>
         </div>
         <div class="pdf-btn-group" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px;"><button onclick="savePdfContract()" style="padding: 10px 25px; background: #FF9800; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">저장</button><button onclick="closeModal('pdfDocumentOverlay')" style="padding: 10px 25px; background: #757575; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">닫기</button></div>
@@ -269,35 +258,21 @@
 </div>
 
 <div id="deleteConfirmModal" class="modal-overlay"><div class="modal-content" style="width:340px; text-align:center;"><h3>삭제 확인</h3><p>선택하신 내역을 정말로 삭제하시겠습니까?</p><div style="display:flex; gap:10px; justify-content:center;"><button onclick="closeModal('deleteConfirmModal')" style="padding:8px 20px; background:#757575; color:white; border:none; border-radius:5px;">닫기</button><button onclick="deleteSelectedRow()" style="padding:8px 20px; background:#d32f2f; color:white; border:none; border-radius:5px;">삭제</button></div></div></div>
-<div id="itemDeleteConfirmModal" class="modal-overlay"><div class="modal-content" style="width:340px; text-align:center;"><h3>삭제 확인</h3><p id="itemDeleteMsg">삭제하시겠습니까?</p><div style="display:flex; gap:10px; justify-content:center;"><button onclick="closeModal('itemDeleteConfirmModal')" style="padding:8px 20px; background:#757575; color:white; border:none; border-radius:5px; cursor:pointer;">닫기</button><button onclick="confirmDeleteMasterItem()" style="padding:8px 20px; background:#d32f2f; color:white; border:none; border-radius:5px; cursor:pointer;">삭제</button></div></div></div>
 <div id="sigModal" class="modal-overlay"><div class="modal-content" style="width:410px; text-align:center;"><h3>✍️ 서명 패드</h3><canvas id="sigCanvas" width="360" height="180"></canvas><div style="display:flex; gap:10px; justify-content:center; margin-top:10px;"><button onclick="clearSigCanvas()" style="padding:8px 15px; background:#ef5350; color:white; border:none; border-radius:5px;">지우기</button><button onclick="closeModal('sigModal')" style="padding:8px 15px; background:#78909c; color:white; border:none; border-radius:5px;">취소</button><button onclick="saveSignature()" style="padding:8px 15px; background:#2e7d32; color:white; border:none; border-radius:5px;">완료</button></div></div></div>
-<div id="baseModal" class="modal-overlay"><div class="modal-content"><h3 id="baseModalTitle">항목 추가</h3><input type="text" id="baseModalInput"><div id="baseModalList" class="manage-list"></div><div style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;"><button onclick="closeModal('baseModal')">취소</button><button onclick="saveBaseModal()" style="background:#2e7d32; color:white; border:none; padding:8px 15px; border-radius:5px;">저장</button></div></div></div>
-<div id="tierModal" class="modal-overlay"><div class="modal-content"><h3>약정구간 설정</h3><input type="text" id="newTierName" placeholder="구간명"><input type="text" id="newTierAmount" placeholder="금액" oninput="this.value = formatNumber(unformatNumber(this.value))"><input type="text" id="newTierDiscount" placeholder="할인율 (%)"><div id="tierModalList" class="manage-list"></div><div style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;"><button onclick="closeModal('tierModal')">취소</button><button onclick="saveTierModal()" style="background:#2e7d32; color:white; border:none; padding:8px 15px; border-radius:5px;">저장</button></div></div></div>
+<div id="baseModal" class="modal-overlay"><div class="modal-content"><h3 id="baseModalTitle">항목 추가</h3><input type="text" id="baseModalInput"><div style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;"><button onclick="closeModal('baseModal')">취소</button><button onclick="saveBaseModal()" style="background:#2e7d32; color:white; border:none; padding:8px 15px; border-radius:5px;">저장</button></div></div></div>
+<div id="tierModal" class="modal-overlay"><div class="modal-content"><h3>약정구간 설정</h3><input type="text" id="newTierName" placeholder="구간명"><input type="text" id="newTierAmount" placeholder="금액" oninput="this.value = formatNumber(unformatNumber(this.value))"><input type="text" id="newTierDiscount" placeholder="할인율 (%)"><div style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;"><button onclick="closeModal('tierModal')">취소</button><button onclick="saveTierModal()" style="background:#2e7d32; color:white; border:none; padding:8px 15px; border-radius:5px;">저장</button></div></div></div>
 
 <script>
-    let masterData = { customer: [], period: [], designated: [], excluded: [], manager: [], bizNo: [], clientRep: [], clientAddr: [], evalPeriod: [], tier: {} };
+    const DEFAULT_DATA = {"master":{"customer":[],"period":["2026년 [하반기]"],"designated":["KEIBA","KDS","EBISU","SHINWA","MOKUBA"],"excluded":[],"manager":["최재환 부장","정재욱 차장","김석주 과장","변기훈 과장","박갑열 과장","박영진 과장","이영진 과장","이창문 과장","이승엽 부장","정재훈 차장","남기원 차장","남상협 차장","김성진 차장","송형섭 과장"],"bizNo":[],"clientRep":[],"clientAddr":[],"evalPeriod":["분기(3개월)","월간(1개월)"],"tier":{"S":{"amount":"30000000","discount":"18"},"A":{"amount":"15000000","discount":"12"},"B":{"amount":"10000000","discount":"8"}}},"rows":[]};
 
-    // 기본 양식 데이터 (2026년) - 페이지 로드시 자동 적용
-    const DEFAULT_DATA = {"master":{"customer":[],"period":["2026년 [하반기]"],"designated":["KEIBA","KDS","EBISU","SHINWA","MOKUBA"],"excluded":[],"manager":["최재환 부장","정재욱 차장","김석주 과장","변기훈 과장","박갑열 과장","박영진 과장","이영진 과장","이창문 과장","이승엽 부장","정재훈 차장","남기원 차장","남상협 차장","김성진 차장","송형섭 과장"],"bizNo":[],"clientRep":[],"clientAddr":[],"evalPeriod":["분기(3개월)","월간(1개월)"],"tier":{"S(+)":{"amount":"50000000","discount":"20"},"S":{"amount":"30000000","discount":"12"},"A":{"amount":"20000000","discount":"8"}}},"rows":[]};
+    let masterData = JSON.parse(JSON.stringify(DEFAULT_DATA.master));
     let selectedDesignated = [], selectedExcluded = [], isLoggedIn = false, currentModalTarget = '';
-    let pendingDelete = { isTier: false, target: null, index: null, key: null };
     let currentSignatureData = ''; 
 
-    // 초기 실행
-    window.onload = function() { applyDefaultData(); updateAuthUI(); };
-
-    // 기본 양식 데이터를 화면에 반영 (master + rows)
-    function applyDefaultData() {
-        masterData = JSON.parse(JSON.stringify(DEFAULT_DATA.master));
+    window.onload = function() { 
         updateAllSelects();
-        const tbody = document.getElementById('tableBody'); tbody.innerHTML = '';
-        (DEFAULT_DATA.rows || []).forEach(r => {
-            const row = tbody.insertRow();
-            row.setAttribute('data-raw-amt', r.rawAmt); row.setAttribute('data-notes', r.notes); row.setAttribute('data-sig', r.sig);
-            row.ondblclick = function() { showDetailPopup(this); };
-            row.innerHTML = `<td><input type="radio" name="rowSelect"></td><td>${r.cells[1]}</td><td>${r.cells[2]}</td><td>${r.cells[3]}</td><td>${r.cells[4]}</td><td>${r.cells[5]}</td><td>${r.cells[6]}</td><td>${r.cells[7]}</td><td>${r.cells[8]}</td><td>${r.cells[9]}</td><td>${r.cells[10]}</td><td>${r.cells[11]}</td><td>${r.cells[12]}</td>`;
-        });
-    }
+        updateAuthUI(); 
+    };
 
     function formatNumber(num) { if(!num) return ""; return num.toString().replace(/[^0-9]/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
     function unformatNumber(str) { if(!str) return ""; return str.toString().replace(/,/g, ''); }
@@ -322,19 +297,14 @@
         } else { isLoggedIn = false; document.getElementById('loginBtn').innerText = "로그인"; document.getElementById('loginBtn').classList.remove('active'); updateAuthUI(); }
     }
     
-    // 💡 권한 UI 업데이트 (공용 버튼 보호)
     function updateAuthUI() {
-        document.querySelectorAll('.btn-plus').forEach(btn => btn.style.display = isLoggedIn ? 'inline-block' : 'none');
-        if (document.getElementById('baseModal').style.display === 'flex') renderBaseModalList();
-        if (document.getElementById('tierModal').style.display === 'flex') renderTierModalList();
+        document.querySelectorAll('.admin-plus').forEach(btn => btn.style.display = isLoggedIn ? 'inline-block' : 'none');
     }
 
-    // 💡 모든 + 버튼 통합 호출 엔진
     function openBaseModal(target, title) {
         currentModalTarget = target;
         document.getElementById('baseModalTitle').innerText = `[${title}] 추가`;
         document.getElementById('baseModalInput').value = '';
-        renderBaseModalList();
         document.getElementById('baseModal').style.display = 'flex';
     }
 
@@ -342,7 +312,6 @@
         document.getElementById('newTierName').value = '';
         document.getElementById('newTierAmount').value = '';
         document.getElementById('newTierDiscount').value = '';
-        renderTierModalList();
         document.getElementById('tierModal').style.display = 'flex';
     }
 
@@ -374,87 +343,6 @@
     }
     function applyTierData() { const t = masterData.tier[document.getElementById('tier').value]; if(t) { document.getElementById('amount').value = formatNumber(t.amount); document.getElementById('discount').value = t.discount; } }
 
-    // ===== 관리자 전용: + 버튼으로 추가한 항목 삭제 =====
-    // baseModal(업체명/기간/브랜드/담당자/평가기간/사업자번호/대표자/주소) 목록 렌더링
-    function renderBaseModalList() {
-        const listDiv = document.getElementById('baseModalList');
-        if (!isLoggedIn) { listDiv.style.display = 'none'; listDiv.innerHTML = ''; return; }
-        listDiv.style.display = 'block';
-        const items = masterData[currentModalTarget] || [];
-        if (!items.length) { listDiv.innerHTML = '<div class="mm-empty">등록된 항목이 없습니다.</div>'; return; }
-        listDiv.innerHTML = '<div class="mm-head">등록된 항목 (× 클릭 시 삭제)</div>' +
-            items.map((v, i) => `<div class="mm-row"><span></span><button class="mm-del" data-idx="${i}">×</button></div>`).join('');
-        const rows = listDiv.querySelectorAll('.mm-row');
-        items.forEach((v, i) => { rows[i].querySelector('span').textContent = v; });
-        listDiv.querySelectorAll('.mm-del').forEach(b => b.onclick = () => askDeleteBaseItem(currentModalTarget, parseInt(b.dataset.idx)));
-    }
-
-    // tierModal(약정구간) 목록 렌더링
-    function renderTierModalList() {
-        const listDiv = document.getElementById('tierModalList');
-        if (!isLoggedIn) { listDiv.style.display = 'none'; listDiv.innerHTML = ''; return; }
-        listDiv.style.display = 'block';
-        const keys = Object.keys(masterData.tier || {});
-        if (!keys.length) { listDiv.innerHTML = '<div class="mm-empty">등록된 구간이 없습니다.</div>'; return; }
-        listDiv.innerHTML = '<div class="mm-head">등록된 구간 (× 클릭 시 삭제)</div>' +
-            keys.map(k => `<div class="mm-row"><span></span><button class="mm-del" data-key="">×</button></div>`).join('');
-        const rows = listDiv.querySelectorAll('.mm-row');
-        keys.forEach((k, i) => {
-            const t = masterData.tier[k];
-            rows[i].querySelector('span').textContent = `${k}  (${formatNumber(t.amount)}원 / ${t.discount}%)`;
-            const btn = rows[i].querySelector('.mm-del');
-            btn.onclick = () => askDeleteTierItem(k);
-        });
-    }
-
-    function askDeleteBaseItem(target, index) {
-        pendingDelete = { isTier: false, target: target, index: index, key: null };
-        document.getElementById('itemDeleteMsg').innerText = `'${masterData[target][index]}' 항목을 삭제하시겠습니까?`;
-        document.getElementById('itemDeleteConfirmModal').style.display = 'flex';
-    }
-
-    function askDeleteTierItem(key) {
-        pendingDelete = { isTier: true, target: 'tier', index: null, key: key };
-        document.getElementById('itemDeleteMsg').innerText = `'${key}' 구간을 삭제하시겠습니까?`;
-        document.getElementById('itemDeleteConfirmModal').style.display = 'flex';
-    }
-
-    function confirmDeleteMasterItem() {
-        if (pendingDelete.isTier) {
-            delete masterData.tier[pendingDelete.key];
-            rebuildTierSelect();
-            renderTierModalList();
-        } else {
-            const t = pendingDelete.target;
-            const val = (masterData[t] || [])[pendingDelete.index];
-            if (masterData[t]) masterData[t].splice(pendingDelete.index, 1);
-            rebuildSingleSelect(t);
-            // 선택된 브랜드 태그에 포함되어 있으면 함께 제거
-            if (t === 'designated') { selectedDesignated = selectedDesignated.filter(x => x !== val); renderTags('designated'); }
-            if (t === 'excluded') { selectedExcluded = selectedExcluded.filter(x => x !== val); renderTags('excluded'); }
-            renderBaseModalList();
-        }
-        closeModal('itemDeleteConfirmModal');
-    }
-
-    // 단일 select 옵션 재구성 (현재 선택값 유지)
-    function rebuildSingleSelect(target) {
-        const map = { customer: 'customer', period: 'period', designated: 'designatedSelect', excluded: 'excludedSelect', manager: 'manager', bizNo: 'bizNo', clientRep: 'clientRep', clientAddr: 'clientAddr', evalPeriod: 'evalPeriod' };
-        const selId = map[target]; const sel = document.getElementById(selId); if (!sel) return;
-        const prev = sel.value;
-        let placeholder = '선택하세요';
-        if (target === 'designated' || target === 'excluded') placeholder = '브랜드 선택';
-        else if (target === 'manager') placeholder = '담당자 선택';
-        sel.innerHTML = `<option value="">${placeholder}</option>` + (masterData[target] || []).map(v => `<option value="${v}">${v}</option>`).join('');
-        if ((masterData[target] || []).includes(prev)) sel.value = prev;
-    }
-
-    function rebuildTierSelect() {
-        const sel = document.getElementById('tier'); const prev = sel.value;
-        sel.innerHTML = `<option value="">구간 선택</option>` + Object.keys(masterData.tier).map(k => `<option value="${k}">${k}</option>`).join('');
-        if (masterData.tier[prev]) sel.value = prev; else { document.getElementById('amount').value = ''; document.getElementById('discount').value = ''; }
-    }
-
     function addTag(type) {
         const sel = document.getElementById(type + 'Select');
         if(sel.value && (type === 'designated' ? !selectedDesignated.includes(sel.value) : !selectedExcluded.includes(sel.value))) {
@@ -465,7 +353,6 @@
     function renderTags(type) { const list = (type === 'designated' ? selectedDesignated : selectedExcluded); document.getElementById(type + 'Tags').innerHTML = list.map(v => `<div class="tag ${type === 'excluded'?'exclude':''}">${v}<span onclick="removeTag('${type}','${v}')">×</span></div>`).join(''); }
     function removeTag(t, v) { if(t === 'designated') selectedDesignated = selectedDesignated.filter(x => x !== v); else selectedExcluded = selectedExcluded.filter(x => x !== v); renderTags(t); }
 
-    // 💡 더블클릭 인덱스 매칭 복구 완료
     function showDetailPopup(row) {
         const r = row.cells;
         document.getElementById('detCustomer').innerText = r[1].innerText;
