@@ -251,12 +251,12 @@
             </div>
             <div class="btn-action-group"><button class="btn-action" onclick="addTableRow()">▼ 리스트등록</button></div>
         </div>
-        <div class="right-panel"><label>특이사항 (비고란)</label><textarea id="notes" placeholder="기타 협의 사항을 기입하세요."></textarea></div>
+        <div class="right-panel"><label>특이사항 (비고란)</label><textarea id="notes" placeholder="기타 협의 사항을 기입하세요.">본 약정의 약정금액(목표)는 각각의 브랜드를 기준으로 설정 브랜드별 실적을 평가한다.</textarea></div>
     </div>
 
     <!-- 하단 제어부 -->
     <div class="btn-action-group">
-        <button class="btn-login" style="background:#d32f2f; flex:1;" onclick="openModal('deleteConfirmModal')">선택삭제</button>
+        <button class="btn-login" style="background:#d32f2f; flex:1;" onclick="openDeleteModal()">선택삭제</button>
         <button class="btn-login" style="background:#1976D2; flex:1;" onclick="openPdfContractPopup()">약정서</button>
         <button class="btn-login" style="background:#FF9800; flex:1;" onclick="saveAsJson()">양식저장</button>
         <label class="btn-login" style="flex:1; text-align:center; background:#455A64; line-height:30px;">
@@ -288,7 +288,7 @@
 <div id="pdfDocumentOverlay" class="modal-overlay">
     <div class="pdf-modal-content">
         <div id="pdfPrintArea" class="contract-paper">
-            <div class="contract-title">작 업 수 입 공 공급 약 정 서</div>
+            <div class="contract-title">수입제품 공급약정서</div>
             <div class="contract-parties-top">공급자: (주)KB-ONE (이하 "갑"이라 한다)<br>공급받는자: <span id="pdfCustName"></span> (이하 "을"이라 한다)</div>
             <div class="contract-body">주식회사 KB-ONE(이하 "갑")과 공급받는자(이하 "을")는 수입작업공구 공급 거래와 관련하여 상호 신뢰를 바탕으로 다음과 같이 공급 약정을 체결한다.<br><br><strong>제 1 조 (목적)</strong> 본 약정서는 "갑"이 수입하여 공급하는 제품을 "을"에게 안정적으로 공급하고, "을"은 약정 조건을 준수함으로써 상호 이익을 증진시키는 데 그 목적이 있다.<br><br><strong>제 2 조 (약정 조건 및 공급 혜택)</strong><br>1. 약정기간 동안 "을"의 총 매입 목표금액 및 할인율은 아래 표의 기준을 적용한다.<br>2. "을"이 지정된 약정 브랜드 발주진행시, "갑"은 합의된 할인율(%)을 적용 출고를 진행한다.<br>3. "을"이 지정된 약정 목표를 미달성시, "갑"은 합의된 할인율(%)을 할증적용 한다.</div>
             <table class="contract-table"><thead><tr><th>약정기간</th><th>평가기간</th><th>약정구간</th><th>약정금액(원)</th><th>약정 할인율</th></tr></thead><tbody><tr><td id="pdfPeriod"></td><td id="pdfEvalPeriod"></td><td id="pdfTier"></td><td id="pdfAmount" style="font-weight: bold;"></td><td id="pdfDiscount" style="font-weight: bold; color: #1976D2;"></td></tr></tbody></table>
@@ -431,7 +431,7 @@
     }
 
     function openSigModal() { clearSigCanvas(); document.getElementById('sigModal').style.display = 'flex'; }
-    function openDeleteModal() { document.getElementById('deleteConfirmModal').style.display = 'flex'; }
+    function openDeleteModal() { if(!document.querySelector('input[name="rowSelect"]:checked')) return alert('삭제할 항목을 선택해 주세요.'); document.getElementById('deleteConfirmModal').style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
     function saveBaseModal() {
@@ -502,18 +502,31 @@
     }
 
     function openPdfContractPopup() {
-        const sel = document.querySelector('input[name="rowSelect"]:checked'); if(!sel) return alert('출력 대상을 선택해 주세요.');
-        const r = sel.closest('tr'); const cells = r.cells;
-        document.getElementById('pdfCustName').innerText = cells[1].innerText; document.getElementById('pdfSignCustName').innerText = cells[1].innerText;
-        document.getElementById('pdfPeriod').innerText = cells[2].innerText; document.getElementById('pdfTier').innerText = cells[3].innerText;
-        document.getElementById('pdfDiscount').innerText = cells[4].innerText; document.getElementById('pdfAmount').innerText = formatNumber(r.getAttribute('data-raw-amt')); 
-        document.getElementById('pdfDesignated').innerText = cells[6].innerText || '없음'; document.getElementById('pdfExcluded').innerText = cells[7].innerText || '없음'; 
-        document.getElementById('pdfEvalPeriod').innerText = cells[8].innerText || '없음'; document.getElementById('pdfNotes').innerText = r.getAttribute('data-notes') || '없음';
-        document.getElementById('pdfSignBizNo').innerText = cells[9].innerText || '-'; document.getElementById('pdfSignRepName').innerText = cells[10].innerText || '-';
-        document.getElementById('pdfSignAddr').innerText = cells[11].innerText || '-';
-        const sigData = r.getAttribute('data-sig');
-        if(sigData) document.getElementById('pdfSigImgWrap').innerHTML = `<img src="${sigData}">`;
-        else document.getElementById('pdfSigImgWrap').innerHTML = '';
+        const sel = document.querySelector('input[name="rowSelect"]:checked');
+        let d;
+        if (sel) {
+            const r = sel.closest('tr'); const c = r.cells;
+            d = { cust:c[1].innerText, period:c[2].innerText, tier:c[3].innerText, discount:c[4].innerText, amount:r.getAttribute('data-raw-amt'), designated:c[6].innerText, excluded:c[7].innerText, evalPeriod:c[8].innerText, bizNo:c[9].innerText, clientRep:c[10].innerText, clientAddr:c[11].innerText, notes:r.getAttribute('data-notes'), sig:r.getAttribute('data-sig') };
+        } else {
+            // 선택/입력이 없어도 현재 폼값(없으면 빈값)으로 기본 미리보기
+            const dc = document.getElementById('discount').value;
+            d = { cust:document.getElementById('customer').value, period:document.getElementById('period').value, tier:document.getElementById('tier').value, discount: dc?dc+'%':'', amount:unformatNumber(document.getElementById('amount').value), designated:selectedDesignated.join(', '), excluded:selectedExcluded.join(', '), evalPeriod:document.getElementById('evalPeriod').value, bizNo:document.getElementById('bizNo').value, clientRep:document.getElementById('clientRep').value, clientAddr:document.getElementById('clientAddr').value, notes:document.getElementById('notes').value, sig:currentSignatureData };
+        }
+        const DEFAULT_NOTE = '본 약정의 약정금액(목표)는 각각의 브랜드를 기준으로 설정 브랜드별 실적을 평가한다.';
+        document.getElementById('pdfCustName').innerText = d.cust || '________';
+        document.getElementById('pdfSignCustName').innerText = d.cust || '________';
+        document.getElementById('pdfPeriod').innerText = d.period || '없음';
+        document.getElementById('pdfTier').innerText = d.tier || '없음';
+        document.getElementById('pdfDiscount').innerText = d.discount || '없음';
+        document.getElementById('pdfAmount').innerText = d.amount ? formatNumber(d.amount) : '없음';
+        document.getElementById('pdfDesignated').innerText = d.designated || '없음';
+        document.getElementById('pdfExcluded').innerText = d.excluded || '없음';
+        document.getElementById('pdfEvalPeriod').innerText = d.evalPeriod || '없음';
+        document.getElementById('pdfNotes').innerText = (d.notes && d.notes.trim() && d.notes.trim() !== '없음') ? d.notes : DEFAULT_NOTE;
+        document.getElementById('pdfSignBizNo').innerText = d.bizNo || '-';
+        document.getElementById('pdfSignRepName').innerText = d.clientRep || '-';
+        document.getElementById('pdfSignAddr').innerText = d.clientAddr || '-';
+        document.getElementById('pdfSigImgWrap').innerHTML = d.sig ? `<img src="${d.sig}">` : '';
         document.getElementById('pdfDocumentOverlay').style.display = 'flex';
     }
 
