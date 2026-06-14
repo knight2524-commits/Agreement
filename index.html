@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#2e7d32">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="약정 시스템">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-180.png">
+    <title>(주)KB-ONE 수입공구 약정 시스템</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        /* === UI 스타일 및 정렬 최적화 === */
+        body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 1550px; margin: auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .header-rates { display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; font-size: 16px; background: #e8f5e9; padding: 12px 20px; border-radius: 8px; font-weight: bold; }
+        .login-area { display: flex; align-items: center; gap: 10px; }
+        .btn-login { background: #455A64; color: white; border: none; padding: 6px 15px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; }
+        .btn-login.active { background: #d32f2f; }
+        .panels { display: flex; gap: 30px; margin-bottom: 20px; }
+        .left-panel { flex: 7; display: flex; flex-direction: column; gap: 15px; }
+        .form-row { display: flex; gap: 20px; width: 100%; }
+        .input-group { display: flex; align-items: center; flex: 1; gap: 10px; }
+        .input-group > label { min-width: 100px; text-align: right; font-size: 14px; font-weight: bold; color: #444; }
+        .input-wrapper { display: flex; flex: 1; gap: 5px; align-items: center; }
+        .input-wrapper select, .input-wrapper input { flex: 1; width: 100%; font-size: 14px; padding: 8px 10px; border: 1px solid #ccc; border-radius: 5px; height: 38px; box-sizing: border-box; outline: none; }
+        
+        .admin-plus { display: none; width: 35px; font-weight: bold; font-size: 18px; cursor: pointer; background: #e0e0e0; border: none; border-radius: 5px; height: 38px; flex-shrink: 0; }
+        .public-plus { display: none; width: 35px; font-weight: bold; font-size: 18px; cursor: pointer; background: #cfd8dc; border: none; border-radius: 5px; height: 38px; flex-shrink: 0; }
+        .public-plus:hover { background: #b0bec5; }
+        
+        /* === 커스텀 검색 드롭다운 스타일 === */
+        .autocomplete-wrapper { position: relative; width: 100%; }
+        .autocomplete-list { 
+            position: absolute; top: 100%; left: 0; right: 0; z-index: 9999; 
+            background: #fff; border: 1px solid #ccc; border-radius: 4px; 
+            max-height: 250px; overflow-y: auto; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        .autocomplete-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 13.5px; text-align: left; }
+        .autocomplete-item:last-child { border-bottom: none; }
+        .autocomplete-item:hover { background-color: #f1f8e9; }
+
+        .btn-sig-open { width: 100%; background: #0288d1; color: white; border: none; border-radius: 5px; height: 38px; font-weight: bold; cursor: pointer; font-size: 13px; }
+        .sig-preview-box { width: 100%; height: 38px; border: 1px solid #ccc; border-radius: 5px; background: #fafafa; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .sig-preview-box img { height: 100%; max-width: 100%; object-fit: contain; }
+        #sigCanvas { border: 2px dashed #ccc; background: #fff; cursor: crosshair; touch-action: none; }
+
+        .right-panel { flex: 3; display: flex; flex-direction: column; gap: 10px; max-width: 400px; } 
+        textarea { width: 100%; flex-grow: 1; font-size: 14px; padding: 12px; resize: none; border: 1px solid #ccc; border-radius: 5px; line-height: 1.5; box-sizing: border-box; }
+        
+        .brand-display-area { display: flex; gap: 20px; margin-top: 5px; padding: 15px; background: #fdfdfd; border: 1px solid #eee; border-radius: 8px; }
+        .brand-column { flex: 1; }
+        .brand-column label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; }
+        .brand-tags { display: flex; flex-wrap: wrap; gap: 5px; min-height: 40px; padding: 8px; background: #fff; border: 1px solid #e0e0e0; border-radius: 5px; }
+        .tag { background: #1976D2; color: white; padding: 2px 10px; border-radius: 15px; font-size: 12px; display: flex; align-items: center; gap: 5px; }
+        .tag.exclude { background: #d32f2f; }
+        .tag span { cursor: pointer; font-weight: bold; }
+        
+        .btn-action-group { display: flex; gap: 10px; margin-top: 10px; }
+        .btn-action { background: #2e7d32; color: white; font-weight: bold; padding: 12px; border: none; border-radius: 5px; flex: 2; cursor: pointer; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 20px; table-layout: fixed; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        th { background-color: #f4f4f4; }
+        tr:hover { background-color: #f1f8e9; }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 25px; border-radius: 8px; width: 450px; display: flex; flex-direction: column; gap: 12px; position: relative; }
+        
+        .pdf-modal-content { width: 820px; height: 95vh; overflow-y: auto; background: #fff; padding: 25px 40px; border-radius: 8px; box-shadow: 0 5px 25px rgba(0,0,0,0.3); position: relative; }
+        .contract-paper { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; color: #000; line-height: 1.5; padding: 10px; }
+        .contract-title { text-align: center; font-size: 23px; font-weight: bold; letter-spacing: 5px; margin-bottom: 20px; text-decoration: underline; text-underline-position: under; }
+        .contract-parties-top { font-size: calc(12.5px + 1.5pt); font-weight: bold; line-height: 1.8; margin-bottom: 20px; border-left: 4px solid #2e7d32; padding-left: 12px; }
+        .contract-body { font-size: 12.5px; text-align: justify; margin-bottom: 10px; }
+        .contract-table { width: 100%; border-collapse: collapse; margin: 12px 0; border: 1.5px solid #000; }
+        .contract-table th, .contract-table td { border: 1px solid #000 !important; padding: 6px; text-align: center; font-size: 12px; }
+        .contract-table th { background-color: #f5f5f5; font-weight: bold; }
+        
+        .contract-sign-zone { display: flex; justify-content: space-between; margin-top: 20px; padding-top: 15px; border-top: 1px solid #000; gap: 15px; }
+        .sign-block { flex: 1; font-size: 11.5px; line-height: 1.6; text-align: left; }
+        .inline-sig-wrap { display: inline-block; width: 45px; height: 30px; vertical-align: middle; position: relative; margin: 0 5px; }
+        .inline-sig-wrap img { width: 100%; height: 100%; object-fit: contain; position: absolute; top: -8px; left: 0; }
+
+        @media print {
+            @page { margin: 0; size: A4; }
+            body { margin: 0; padding: 0; background: #fff; }
+            .container, .panels, .btn-action-group, #dataTable, .header-rates, .modal-overlay:not(#pdfDocumentOverlay) { display: none !important; }
+            #pdfDocumentOverlay { display: block !important; position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: #fff; visibility: visible; }
+            #pdfDocumentOverlay * { visibility: visible !important; }
+            .pdf-btn-group { display: none !important; }
+            .pdf-modal-content { box-shadow: none; width: 100%; height: 100%; max-height: none; overflow: visible; padding: 15mm 15mm; }
+            .contract-paper { scale: 95%; transform-origin: top center; }
+        }
+
+        .table-scroll { width: 100%; }
+        .manage-list { display: none; max-height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 6px; margin-top: 8px; }
+        .manage-list .mm-head { font-size: 12px; font-weight: bold; color: #666; padding: 8px 10px; background: #f4f4f4; position: sticky; top: 0; border-bottom: 1px solid #e0e0e0; }
+        .manage-list .mm-empty { font-size: 12px; color: #aaa; padding: 12px 10px; text-align: center; }
+        .manage-list .mm-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; border-bottom: 1px solid #f0f0f0; }
+        .manage-list .mm-row:last-child { border-bottom: none; }
+        .manage-list .mm-row span { font-size: 13px; word-break: break-all; padding-right: 8px; }
+        .manage-list .mm-del { background: #d32f2f; color: #fff; border: none; border-radius: 4px; width: 26px; height: 26px; min-width: 26px; cursor: pointer; font-weight: bold; font-size: 15px; line-height: 1; flex-shrink: 0; }
+        .manage-list .mm-del:hover { background: #b71c1c; }
+        .settings-bar { display:flex; align-items:center; gap:8px; margin-top:10px; flex-wrap:wrap; }
+        .settings-bar .sbtn { width:auto; padding:0 14px; height:34px; font-size:12px; font-weight:bold; border:none; border-radius:5px; cursor:pointer; color:#fff; }
+
+        @media (max-width: 680px) {
+            body { padding: 8px; -webkit-text-size-adjust: 100%; }
+            .container { padding: 12px; border-radius: 0; box-shadow: none; max-width: 100%; }
+            .header-rates { flex-direction: column; align-items: flex-start; gap: 8px; font-size: 14px; padding: 10px 12px; margin-bottom: 16px; }
+            .login-area { width: 100%; justify-content: space-between; }
+            .panels { flex-direction: column; gap: 14px; }
+            .left-panel { gap: 14px; }
+            .right-panel { max-width: 100%; }
+            .right-panel textarea { min-height: 80px; }
+            .form-row { flex-direction: column; gap: 14px; }
+            .input-group { flex-direction: column; align-items: stretch; gap: 5px; }
+            .input-group > label { min-width: 0; text-align: left; font-size: 12.5px; color: #2e7d32; }
+            .input-wrapper select, .input-wrapper input { height: 46px; font-size: 16px; }
+            .admin-plus, .public-plus { width: 46px; height: 46px; font-size: 20px; }
+            .brand-display-area { flex-direction: column; gap: 12px; }
+            .btn-action { padding: 16px; font-size: 16px; }
+            .btn-sig-open { height: 46px; font-size: 15px; }
+            .sig-preview-box { height: 56px; }
+            .btn-action-group { flex-wrap: wrap; gap: 8px; }
+            .btn-action-group > * { flex: 1 1 46% !important; min-height: 48px; line-height: 36px !important; font-size: 13px; box-sizing: border-box; }
+            .settings-bar .sbtn { flex: 1 1 46%; min-height: 46px; }
+            .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid #eee; border-radius: 6px; }
+            #dataTable { min-width: 1000px; }
+            .modal-content { width: 92vw; max-width: 92vw; }
+            #sigCanvas { width: 100%; height: 170px; }
+            .pdf-modal-content { width: 96vw; padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="appLoginOverlay" class="modal-overlay" style="background: #e8f5e9; z-index: 99999;">
+    <div class="modal-content" style="width: 320px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+        <h2 style="color: #2e7d32; margin-top:0;">시스템 접속</h2>
+        <p style="font-size: 13px; color: #666; margin-bottom: 20px;">아이디와 비밀번호를 입력해주세요.</p>
+        <input type="text" id="appLoginId" placeholder="아이디" style="width: 100%; padding: 12px; margin-bottom: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;">
+        <input type="password" id="appLoginPw" placeholder="비밀번호" style="width: 100%; padding: 12px; margin-bottom: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;" onkeypress="if(event.keyCode==13) attemptAppLogin()">
+        <p id="loginErrorMsg" style="color: #d32f2f; font-size: 12px; display: none; margin-bottom: 10px; font-weight: bold;">아이디 또는 비밀번호가 일치하지 않습니다.</p>
+        <button onclick="attemptAppLogin()" style="width: 100%; padding: 12px; background: #2e7d32; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 15px;">로그인</button>
+    </div>
+</div>
+
+<div class="container">
+    <div class="header-rates">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <span>(주)KB-ONE 수입공구 약정 시스템</span>
+            <button class="btn-login" style="background:#FF9800; padding:4px 10px; font-size:12px;" onclick="openSurchargeModal()">🧮 할증계산기</button>
+        </div>
+        <div class="login-area">
+            <span id="adminTitle" style="font-weight: normal; font-size: 14px;">관리자: 석정주 과장</span>
+            <button id="loginBtn" class="btn-login" onclick="toggleLogin()">로그인</button>
+        </div>
+    </div>
+
+    <div class="panels">
+        <div class="left-panel">
+            <div class="form-row">
+                <div class="input-group">
+                    <label>공급받는자</label>
+                    <div class="input-wrapper">
+                        <div class="autocomplete-wrapper">
+                            <input type="text" id="customer" placeholder="업체명 또는 거래처코드 검색" autocomplete="off">
+                            <div id="customerDropdown" class="autocomplete-list"></div>
+                        </div>
+                        <button class="public-plus" onclick="openBaseModal('customer', '업체명')">+</button>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>약정기간</label>
+                    <div class="input-wrapper">
+                        <select id="period"><option value="">선택하세요</option></select>
+                        <button class="admin-plus" onclick="openBaseModal('period', '기간')">+</button>
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="input-group">
+                    <label>약정구간</label>
+                    <div class="input-wrapper">
+                        <select id="tier" onchange="applyTierData()"><option value="">선택하세요</option></select>
+                        <button class="admin-plus" onclick="openTierModal()">+</button>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>지정브랜드</label>
+                    <div class="input-wrapper">
+                        <select id="designatedSelect" onchange="addTag('designated')"><option value="">브랜드 선택</option></select>
+                        <button class="admin-plus" onclick="openBaseModal('designated', '지정브랜드')">+</button>
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="input-group">
+                    <label>약정금액(원)</label>
+                    <div class="input-wrapper"><input type="text" id="amount" placeholder="자동입력" oninput="this.value = formatNumber(unformatNumber(this.value))"></div>
+                </div>
+                <div class="input-group">
+                    <label>제외품목</label>
+                    <div class="input-wrapper">
+                        <select id="excludedSelect" onchange="addTag('excluded')"><option value="">품목 선택</option></select>
+                        <button class="admin-plus" onclick="openBaseModal('excluded', '제외품목')">+</button>
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="input-group">
+                    <label>할인율(%)</label>
+                    <div class="input-wrapper"><input type="text" id="discount" placeholder="예: 10"></div>
+                </div>
+                <div class="input-group">
+                    <label>평가기간</label>
+                    <div class="input-wrapper">
+                        <select id="evalPeriod"><option value="">선택하세요</option></select>
+                        <button class="admin-plus" onclick="openBaseModal('evalPeriod', '평가기간')">+</button>
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="input-group">
+                    <label>사업자번호</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="bizNo" placeholder="자동입력 (수정가능)">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>담당자</label>
+                    <div class="input-wrapper">
+                        <select id="manager"><option value="">담당자 선택</option></select>
+                        <button class="admin-plus" onclick="openBaseModal('manager', '담당자')">+</button>
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="input-group">
+                    <label>주소(을)</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="clientAddr" placeholder="자동입력 (수정가능)">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>대표자(을)</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="clientRep" placeholder="자동입력 (수정가능)">
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="input-group">
+                    <label>전자서명</label>
+                    <div class="input-wrapper">
+                        <button class="btn-sig-open" onclick="openSigModal()">✍️ 공급받는자 서명 패드 열기</button>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>서명 미리보기</label>
+                    <div class="input-wrapper">
+                        <div id="sigPreview" class="sig-preview-box"><span style="color:#aaa; font-size:12px;">서명 없음</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="brand-display-area">
+                <div class="brand-column"><label style="color: #1976D2; font-weight:bold;">🟦 지정브랜드 (선택)</label><div id="designatedTags" class="brand-tags"></div></div>
+                <div class="brand-column"><label style="color: #d32f2f; font-weight:bold;">🟥 제외품목 (제외)</label><div id="excludedTags" class="brand-tags"></div></div>
+            </div>
+            <div class="btn-action-group"><button class="btn-action" onclick="addTableRow()">▼ 리스트등록</button></div>
+        </div>
+        <div class="right-panel">
+            <label>특이사항 (비고란)</label>
+            <textarea id="notes" placeholder="기타 협의 사항을 기입하세요.">본 약정의 약정금액(목표)는 각각의 브랜드를 기준으로 설정 브랜드별 실적을 평가한다.
+지정브랜드는 약정당 최대 2개까지 지정가능하며 약정금액또한 지정브랜드 실적의 합산으로 평가 한다.</textarea>
+        </div>
+    </div>
+
+    <div class="btn-action-group">
+        <label id="dbUploadBtn" class="btn-login" style="flex:1; text-align:center; background:#00796B; line-height:30px; display:none;">
+            📁 DB등록(엑셀)
+            <input type="file" id="dbUploader" accept=".xlsx, .xls, .csv" style="display:none;" onchange="handleExcelUpload(event)">
+        </label>
+        <button class="btn-login" style="background:#d32f2f; flex:1;" onclick="openDeleteModal()">선택삭제</button>
+        <button class="btn-login" style="background:#1976D2; flex:1;" onclick="openPdfContractPopup()">약정서</button>
+        <button class="btn-login" style="background:#FF9800; flex:1;" onclick="saveAsJson()">양식저장</button>
+        <label class="btn-login" style="flex:1; text-align:center; background:#455A64; line-height:30px;">
+            양식불러오기
+            <input type="file" id="loadJson" style="display:none;" onchange="loadFromJson(event)">
+        </label>
+    </div>
+
+    <div class="settings-bar">
+        <button id="userManageBtn" class="admin-plus sbtn" onclick="openUserManageModal()" style="background:#E64A19;">👥 사용자 관리</button>
+        
+        <button class="admin-plus sbtn" onclick="publishSettings()" style="background:#6a1b9a;">⬇ 설정 내보내기(배포용)</button>
+        <button class="admin-plus sbtn" onclick="restoreDefaults()" style="background:#90a4ae;">기본값 복원</button>
+        <button class="sbtn" onclick="refreshSettings()" style="background:#0288d1;">🔄 서버 새로고침</button>
+        <span id="policyStatus" style="font-size:11.5px; color:#777;">정책 적용: 기본값</span>
+    </div>
+
+    <div class="table-scroll">
+    <table id="dataTable">
+        <thead>
+            <tr>
+                <th style="width:40px;">선택</th><th>업체명</th><th>기간</th><th>구간</th><th style="width:70px;">할인율</th><th style="width:70px;">담당자</th><th>지정브랜드</th><th>제외품목</th><th>평가기간</th><th>사업자번호(을)</th><th>대표자</th><th>주소</th><th style="width:60px;">서명</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+    </div>
+</div>
+
+<div id="userManageModal" class="modal-overlay">
+    <div class="modal-content" style="width: 400px;">
+        <h3 style="margin-top:0; color:#E64A19;">👥 사용자(로그인) 관리</h3>
+        <p style="font-size:12px; color:#666; margin-top:-5px;">앱 시작 시 접속할 수 있는 아이디와 비밀번호를 등록하세요.</p>
+        <div style="display:flex; gap:10px; margin-bottom: 10px;">
+            <input type="text" id="newUserId" placeholder="새 아이디" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px;">
+            <input type="text" id="newUserPw" placeholder="새 비밀번호" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px;">
+            <button onclick="saveUser()" style="background:#2e7d32; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">저장</button>
+        </div>
+        <div id="userListArea" class="manage-list" style="display:block; max-height:250px;"></div>
+        <div style="text-align: right; margin-top: 15px;">
+            <button onclick="closeModal('userManageModal')" style="padding:8px 20px; background:#757575; color:white; border:none; border-radius:5px; cursor:pointer;">닫기</button>
+        </div>
+    </div>
+</div>
+
+
+<div id="pdfDocumentOverlay" class="modal-overlay">
+    <div class="pdf-modal-content">
+        <div id="pdfPrintArea" class="contract-paper">
+            <div class="contract-title">수입제품 공급약정서</div>
+            <div class="contract-parties-top">공급자: (주)KB-ONE (이하 "갑"이라 한다)<br>공급받는자: <span id="pdfCustName"></span> (이하 "을"이라 한다)</div>
+            <div class="contract-body">주식회사 KB-ONE(이하 "갑")과 공급받는자(이하 "을")는 수입작업공구 공급 거래와 관련하여 상호 신뢰를 바탕으로 다음과 같이 공급 약정을 체결한다.<br><br><strong>제 1 조 (목적)</strong> 본 약정서는 "갑"이 수입하여 공급하는 제품을 "을"에게 안정적으로 공급하고, "을"은 약정 조건을 준수함으로써 상호 이익을 증진시키는 데 그 목적이 있다.<br><br><strong>제 2 조 (약정 조건 및 공급 혜택)</strong><br>1. 약정기간 동안 "을"의 총 매입 목표금액 및 할인율은 아래 표의 기준을 적용한다.<br>2. "을"이 지정된 약정 브랜드 발주진행시, "갑"은 합의된 할인율(%)을 적용 출고를 진행한다.<br>3. "을"이 지정된 약정 목표를 미달성시, "갑"은 합의된 할인율(%)을 할증적용 한다.</div>
+            <table class="contract-table"><thead><tr><th>약정기간</th><th>평가기간</th><th>약정구간</th><th>약정금액(원)</th><th>약정 할인율</th></tr></thead><tbody><tr><td id="pdfPeriod"></td><td id="pdfEvalPeriod"></td><td id="pdfTier"></td><td id="pdfAmount" style="font-weight: bold;"></td><td id="pdfDiscount" style="font-weight: bold; color: #1976D2;"></td></tr></tbody></table>
+            <div class="contract-body" style="text-align: justify;"><strong>제 3 조 (가격인상 및 출고조정)</strong><br>1. 가격인상적용시 인상적용 요율을 동일하게 적용진행한다.<br>2. 갑의 해당 브랜드의 공급사 사정으로 인한 적정 재고 보유량의 문제상황 발생시 상호간의 협의하에 약정달성기간의 유예설정가능하다(단,을의 일방적인 요청으로 미달성진행시 2조3항을 적용 할인된 출고분을 할정적용한다)<br><br><strong>제 4 조 (브랜드 취급 범위)</strong><br>1. <strong>지정 브랜드:</strong> <span id="pdfDesignated" style="color:#1976D2;"></span> / 2. <strong>제외 품목:</strong> <span id="pdfExcluded" style="color:#d32f2f;"></span><br><br><strong>제 5 조 (기타 및 특약사항)</strong><br><div id="pdfNotes" style="min-height: 40px; background: #fafafa; padding: 8px; border: 1px solid #ddd; white-space: pre-wrap; font-size:12px;"></div></div>
+            <div class="contract-sign-zone"><div class="sign-block"><strong>공급자 ("갑")</strong><br>회사명: (주)케이비원 / 사업자 등록번호: 504-81-15357<br>주소: 대구광역시 중구 서야동 99-1<br>업종: 도,소매 / 업태: 일반철물 및 수공구<br>대표자: 김정도 (인)</div><div class="sign-block" style="text-align: right;"><strong>공급받는자 ("을")</strong><br>회사명: <span id="pdfSignCustName"></span> / 사업자번호: <span id="pdfSignBizNo"></span><br>주소: <span id="pdfSignAddr"></span><br>대표자: <span id="pdfSignRepName" style="font-weight:bold;"></span> <span id="pdfSigImgWrap" class="inline-sig-wrap"></span>(인)</div></div>
+        </div>
+        <div class="pdf-btn-group" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px;"><button onclick="savePdfContract()" style="padding: 10px 25px; background: #FF9800; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">저장</button><button onclick="closeModal('pdfDocumentOverlay')" style="padding: 10px 25px; background: #757575; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">닫기</button></div>
+    </div>
+</div>
+
+<div id="detailModal" class="modal-overlay">
+    <div class="modal-content" style="width: 520px;">
+        <div style="border-bottom: 2px solid #2e7d32; padding-bottom: 10px; margin-bottom: 10px;"><h3>약정 상세 내역</h3></div>
+        <div id="detManager" style="position: absolute; top: 25px; right: 25px; font-weight: bold; color: #1976D2; background: #e3f2fd; padding: 4px 10px; border-radius: 4px; font-size: 13px;"></div>
+        <div style="display: flex; border-bottom: 1px solid #eee; padding: 8px 0; font-size: 14px;"><div style="font-weight: bold; width: 120px; color: #666;">업체명</div><div id="detCustomer" style="flex: 1;"></div></div>
+        <div style="display: flex; border-bottom: 1px solid #eee; padding: 8px 0; font-size: 14px;"><div style="font-weight: bold; width: 120px; color: #666;">약정기간</div><div id="detPeriod" style="flex: 1;"></div></div>
+        <div style="display: flex; border-bottom: 1px solid #eee; padding: 8px 0; font-size: 14px;"><div style="font-weight: bold; width: 120px; color: #666;">평가기간</div><div id="detEvalPeriod" style="flex: 1;"></div></div>
+        <div style="display: flex; border-bottom: 1px solid #eee; padding: 8px 0; font-size: 14px;"><div style="font-weight: bold; width: 120px; color: #666;">약정구간</div><div id="detTier" style="flex: 1;"></div></div>
+        <div style="display: flex; border-bottom: 1px solid #eee; padding: 8px 0; font-size: 14px;"><div style="font-weight: bold; width: 120px; color: #666;">약정금액</div><div id="detAmount" style="flex: 1;"></div></div>
+        <div style="display: flex; border-bottom: 1px solid #eee; padding: 8px 0; font-size: 14px;"><div style="font-weight: bold; width: 120px; color: #666;">할인율</div><div id="detDiscount" style="flex: 1;"></div></div>
+        <div style="display: flex; flex-direction:column; border-bottom: 1px solid #eee; padding: 8px 0; font-size: 14px;"><div style="font-weight: bold; color: #666; margin-bottom:5px;">지정브랜드</div><div id="detDesignated"></div></div>
+        <div style="display: flex; flex-direction:column; border-bottom: 1px solid #eee; padding: 8px 0; font-size: 14px;"><div style="font-weight: bold; color: #666; margin-bottom:5px;">제외품목</div><div id="detExcluded"></div></div>
+        <div style="margin-top:15px;"><button onclick="closeModal('detailModal')" style="width:100%; padding:10px; background:#455A64; color:white; border:none; border-radius:5px; cursor:pointer;">닫기</button></div>
+    </div>
+</div>
+
+<div id="deleteConfirmModal" class="modal-overlay"><div class="modal-content" style="width:340px; text-align:center;"><h3>삭제 확인</h3><p>선택하신 내역을 정말로 삭제하시겠습니까?</p><div style="display:flex; gap:10px; justify-content:center;"><button onclick="closeModal('deleteConfirmModal')" style="padding:8px 20px; background:#757575; color:white; border:none; border-radius:5px;">닫기</button><button onclick="deleteSelectedRow()" style="padding:8px 20px; background:#d32f2f; color:white; border:none; border-radius:5px;">삭제</button></div></div></div>
+<div id="sigModal" class="modal-overlay"><div class="modal-content" style="width:410px; text-align:center;"><h3>✍️ 서명 패드</h3><canvas id="sigCanvas" width="360" height="180"></canvas><div style="display:flex; gap:10px; justify-content:center; margin-top:10px;"><button onclick="clearSigCanvas()" style="padding:8px 15px; background:#ef5350; color:white; border:none; border-radius:5px;">지우기</button><button onclick="closeModal('sigModal')" style="padding:8px 15px; background:#78909c; color:white; border:none; border-radius:5px;">취소</button><button onclick="saveSignature()" style="padding:8px 15px; background:#2e7d32; color:white; border:none; border-radius:5px;">완료</button></div></div></div>
+<div id="baseModal" class="modal-overlay"><div class="modal-content"><h3 id="baseModalTitle">항목 추가</h3><input type="text" id="baseModalInput"><div id="baseModalList" class="manage-list"></div><div style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;"><button onclick="closeModal('baseModal')">취소</button><button onclick="saveBaseModal()" style="background:#2e7d32; color:white; border:none; padding:8px 15px; border-radius:5px;">저장</button></div></div></div>
+<div id="tierModal" class="modal-overlay"><div class="modal-content"><h3>약정구간 설정</h3><input type="text" id="newTierName" placeholder="구간명"><input type="text" id="newTierAmount" placeholder="금액" oninput="this.value = formatNumber(unformatNumber(this.value))"><input type="text" id="newTierDiscount" placeholder="할인율 (%)"><div style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;"><button onclick="closeModal('tierModal')">취소</button><button onclick="saveTierModal()" style="background:#2e7d32; color:white; border:none; padding:8px 15px; border-radius:5px;">저장</button></div></div></div>
+
+<div id="surchargeModal" class="modal-overlay">
+    <div class="modal-content" style="width: 350px;">
+        <h3 style="margin-top:0; color:#FF9800;">🧮 할증 계산기</h3>
+        <div style="display:flex; flex-direction:column; gap:10px; margin-bottom: 15px;">
+            <div>
+                <label style="font-size:13px; font-weight:bold; color:#666;">매출금액 (원)</label>
+                <input type="text" id="surSalesAmount" placeholder="매출금액 입력" style="width:100%; padding:10px; box-sizing:border-box; border:1px solid #ccc; border-radius:4px; margin-top:5px;" oninput="this.value = formatNumber(unformatNumber(this.value))">
+            </div>
+            <div>
+                <label style="font-size:13px; font-weight:bold; color:#666;">약정구간 (할인율)</label>
+                <select id="surTierSelect" style="width:100%; padding:10px; box-sizing:border-box; border:1px solid #ccc; border-radius:4px; margin-top:5px;">
+                    <option value="">구간 선택</option>
+                </select>
+            </div>
+            <button onclick="calculateSurcharge()" style="width:100%; padding:12px; background:#2e7d32; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer; font-size:14px; margin-top:5px;">계산하기</button>
+        </div>
+        <div style="background:#f4f4f4; padding:15px; border-radius:5px; text-align:center;">
+            <div style="font-size:13px; color:#666; margin-bottom:5px;">할증(가산) 금액</div>
+            <div id="surResult" style="font-size:22px; font-weight:bold; color:#d32f2f;">0 원</div>
+        </div>
+        <div style="text-align: right; margin-top: 15px;">
+            <button onclick="closeModal('surchargeModal')" style="padding:8px 20px; background:#757575; color:white; border:none; border-radius:5px; cursor:pointer;">닫기</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let customerDB = [];
+
+    // === 기본 데이터 구조에 'users' (계정 관리) 객체 추가 ===
+    const DEFAULT_DATA = {
+        "master": {
+            "users": { "admin": "hq1234" }, // 기본 로그인 계정
+            "customer":[],"period":["2026년 [하반기]"],"designated":["KEIBA","KDS","EBISU","SHINWA","MOKUBA"],"excluded":[],"manager":["최재환 부장","정재욱 차장","김석주 과장","변기훈 과장","박갑열 과장","박영진 과장","이영진 과장","이창문 과장","이승엽 부장","정재훈 차장","남기원 차장","남상협 차장","김성진 차장","송형섭 과장"],"bizNo":[],"clientRep":[],"clientAddr":[],"evalPeriod":["분기(3개월)","월간(1개월)"],"tier":{"S":{"amount":"30000000","discount":"18"},"A":{"amount":"15000000","discount":"12"},"B":{"amount":"10000000","discount":"8"}}
+        },
+        "rows": []
+    };
+
+    let masterData = JSON.parse(JSON.stringify(DEFAULT_DATA.master));
+    let selectedDesignated = [], selectedExcluded = [], isLoggedIn = false, currentModalTarget = '';
+    let currentSignatureData = ''; 
+
+    // === 앱 실행 시 가장 먼저 확인 ===
+    window.onload = function() { 
+        loadSettings(true); // 서버 및 로컬스토리지를 불러와 masterData 최신화
+        
+        // 데이터에 사용자 정보가 없다면 기본값 세팅
+        if (!masterData.users) masterData.users = { "admin": "hq1234" };
+
+        // 접속(초기 로그인) 여부 체크
+        if (!sessionStorage.getItem('appUnlocked')) {
+            document.getElementById('appLoginOverlay').style.display = 'flex';
+        }
+
+        initCustomerDB(); 
+        updateAllSelects();
+        updateAuthUI(); 
+    };
+
+    // === 1. 초기 앱 접속 로그인 기능 ===
+    function attemptAppLogin() {
+        const id = document.getElementById('appLoginId').value.trim();
+        const pw = document.getElementById('appLoginPw').value.trim();
+        
+        if (!masterData.users) masterData.users = { "admin": "hq1234" };
+
+        if (masterData.users[id] && masterData.users[id] === pw) {
+            document.getElementById('appLoginOverlay').style.display = 'none';
+            sessionStorage.setItem('appUnlocked', 'true');
+        } else {
+            document.getElementById('loginErrorMsg').style.display = 'block';
+        }
+    }
+
+    // === 2. 사용자 계정 추가/관리 기능 (관리자 전용) ===
+    function openUserManageModal() {
+        renderUserList();
+        document.getElementById('userManageModal').style.display = 'flex';
+    }
+
+    function renderUserList() {
+        const area = document.getElementById('userListArea');
+        if (!masterData.users) masterData.users = { "admin": "hq1234" };
+        
+        let html = '<div class="mm-head" style="display:flex;"><span style="flex:1">아이디</span><span style="flex:1">비밀번호</span><span style="width:40px;">관리</span></div>';
+        for (let id in masterData.users) {
+            html += `<div class="mm-row" style="display:flex; align-items:center;">
+                <span style="flex:1; font-weight:bold;">${id}</span>
+                <span style="flex:1; color:#1976D2;">${masterData.users[id]}</span>
+                <button class="mm-del" onclick="deleteUser('${id}')">×</button>
+            </div>`;
+        }
+        area.innerHTML = html;
+    }
+
+    function saveUser() {
+        const id = document.getElementById('newUserId').value.trim();
+        const pw = document.getElementById('newUserPw').value.trim();
+        if(!id || !pw) return alert('아이디와 비밀번호를 모두 입력하세요.');
+        
+        if (!masterData.users) masterData.users = {};
+        masterData.users[id] = pw;
+        
+        document.getElementById('newUserId').value = '';
+        document.getElementById('newUserPw').value = '';
+        renderUserList();
+        saveLocal(collectSettings()); // 추가 후 로컬 스토리지 자동 저장
+    }
+
+    function deleteUser(id) {
+        if (id === 'admin') return alert('기본 admin 계정은 시스템 보호를 위해 삭제할 수 없습니다. (비밀번호 변경만 가능)');
+        if (!confirm(`'${id}' 계정을 삭제하시겠습니까?`)) return;
+        
+        delete masterData.users[id];
+        renderUserList();
+        saveLocal(collectSettings());
+    }
+
+    // === 관리자 로그인 및 UI 업데이트 제어 ===
+    function toggleLogin() {
+        if (!isLoggedIn) {
+            // 관리자 비밀번호 입력 (2014038)
+            if (prompt("관리자 비밀번호를 입력하세요:") === "2014038") { 
+                isLoggedIn = true; 
+                document.getElementById('loginBtn').innerText = "로그아웃"; 
+                document.getElementById('loginBtn').classList.add('active'); 
+                updateAuthUI(); 
+            }
+        } else { 
+            isLoggedIn = false; 
+            document.getElementById('loginBtn').innerText = "관리자 로그인"; 
+            document.getElementById('loginBtn').classList.remove('active'); 
+            updateAuthUI(); 
+        }
+    }
+    
+    function updateAuthUI() {
+        // 관리자 로그인 시에만 +버튼 노출
+        document.querySelectorAll('.admin-plus, .public-plus').forEach(btn => btn.style.display = isLoggedIn ? 'inline-block' : 'none');
+        
+        // 관리자 로그인 시에만 [DB등록(엑셀)] 버튼 노출
+        const dbBtn = document.getElementById('dbUploadBtn');
+        if(dbBtn) dbBtn.style.display = isLoggedIn ? 'block' : 'none';
+
+        // 관리자 로그인 시에만 [사용자 관리] 버튼 노출
+        const userBtn = document.getElementById('userManageBtn');
+        if(userBtn) userBtn.style.display = isLoggedIn ? 'inline-block' : 'none';
+
+        if (document.getElementById('baseModal').style.display === 'flex') renderBaseModalList();
+    }
+
+
+    // === 로컬 스토리지에서 기존 거래처 DB 불러오기 ===
+    function initCustomerDB() {
+        const savedDB = localStorage.getItem('kb1_customer_db');
+        if(savedDB) {
+            customerDB = JSON.parse(savedDB);
+        }
+    }
+
+    // === 엑셀(.xlsx) 파일 업로드 시 거래처 DB 자동 등록 ===
+    function handleExcelUpload(event) {
+        const file = event.target.files[0];
+        if(!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                
+                const json = XLSX.utils.sheet_to_json(worksheet, {defval: ""});
+                
+                let newDB = [];
+                json.forEach(row => {
+                    if(row['거래처명']) {
+                        const code = row['거래처코드'] ? row['거래처코드'].toString().trim() : ''; 
+                        const company = row['거래처명'].toString().trim();
+                        const rep = row['대표자'] ? row['대표자'].toString().trim() : '';
+                        let bizNo = row['사업자번호'] ? row['사업자번호'].toString().trim() : '';
+                        const address = row['주소'] ? row['주소'].toString().trim() : '';
+                        
+                        let cleanBizNo = bizNo.replace(/[^0-9]/g, '');
+                        if(cleanBizNo.length === 10) {
+                            bizNo = cleanBizNo.substring(0,3) + '-' + cleanBizNo.substring(3,5) + '-' + cleanBizNo.substring(5);
+                        }
+                        
+                        newDB.push({ code, company, rep, bizNo, address }); 
+                    }
+                });
+                
+                if(newDB.length > 0) {
+                    customerDB = newDB;
+                    localStorage.setItem('kb1_customer_db', JSON.stringify(customerDB));
+                    alert(`성공! 총 ${customerDB.length}건의 거래처 데이터가 등록되었습니다.`);
+                } else {
+                    alert('데이터를 읽어올 수 없습니다. 엑셀의 첫 번째 줄에 "거래처코드", "거래처명", "대표자", "사업자번호", "주소" 가 있는지 확인해주세요.');
+                }
+            } catch (error) {
+                alert('파일을 읽는 중 오류가 발생했습니다.');
+            }
+            event.target.value = '';
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    // === 커스텀 드롭다운 표시 로직 (렌더링 30개 제한 및 업체명+코드 다중 검색) ===
+    document.getElementById('customer').addEventListener('input', function() {
+        const val = this.value.trim();
+        const dropdown = document.getElementById('customerDropdown');
+        dropdown.innerHTML = '';
+        
+        if(!val) { dropdown.style.display = 'none'; return; }
+        
+        const matched = customerDB.filter(c => 
+            (c.company && c.company.includes(val)) || 
+            (c.code && c.code.includes(val))
+        ).slice(0, 30);
+        
+        if(matched.length > 0) {
+            matched.forEach(c => {
+                const div = document.createElement('div');
+                div.className = 'autocomplete-item';
+                const displayCode = c.code ? `[${c.code}] ` : '';
+                div.innerHTML = `<strong>${displayCode}${c.company}</strong> <span style="color:#888; font-size:12px;">(${c.rep} / ${c.bizNo})</span>`;
+                div.onclick = function() {
+                    document.getElementById('customer').value = c.company;
+                    document.getElementById('bizNo').value = c.bizNo;
+                    document.getElementById('clientRep').value = c.rep;
+                    document.getElementById('clientAddr').value = c.address;
+                    dropdown.style.display = 'none';
+                };
+                dropdown.appendChild(div);
+            });
+            dropdown.style.display = 'block';
+        } else {
+            dropdown.style.display = 'none';
+        }
+    });
+
+    document.addEventListener('click', function(e) {
+        if(e.target.id !== 'customer') {
+            document.getElementById('customerDropdown').style.display = 'none';
+        }
+    });
+
+    const SETTINGS_URL = "";   
+    const SETTINGS_KEY = 'kb1_yakjeong_settings';
+    function settingsEndpoint(){ return (SETTINGS_URL || 'settings.json') + '?_=' + Date.now(); }
+    function collectSettings(){ return { master: masterData, updatedAt: Date.now(), by: '석정주 과장' }; }
+    function applySettings(s){
+        if(!s || !s.master) return;
+        masterData = s.master; 
+        if(!masterData.users) masterData.users = { "admin": "hq1234" }; 
+        updateAllSelects();
+        if(s.updatedAt){ try{ document.getElementById('policyStatus').innerText = `정책 적용: ${new Date(s.updatedAt).toLocaleString('ko-KR')} (${s.by||'-'})`; }catch(e){} }
+    }
+    function saveLocal(s){ try{ localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); }catch(e){} }
+    function loadLocal(){ try{ const v=localStorage.getItem(SETTINGS_KEY); return v?JSON.parse(v):null; }catch(e){ return null; } }
+    function loadSettings(silent){
+        const cached=loadLocal(); if(cached) applySettings(cached);
+        fetch(settingsEndpoint(), {cache:'no-store'})
+            .then(r=>{ if(!r.ok) throw 0; return r.json(); })
+            .then(s=>{ const local=loadLocal(); if(!local || !local.updatedAt || (s.updatedAt||0) >= local.updatedAt){ applySettings(s); saveLocal(s); } if(!silent) alert('서버 최신 설정을 불러왔습니다.'); })
+            .catch(()=>{ if(!silent && !cached) alert('서버 설정을 불러오지 못했습니다. (기본값 사용)'); });
+    }
+    function refreshSettings(){ loadSettings(false); }
+    function publishSettings(){
+        if(!isLoggedIn) return alert('관리자만 내보낼 수 있습니다.');
+        const s=collectSettings(); saveLocal(s); applySettings(s);
+        const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(s,null,2)],{type:'application/json'})); a.download='settings.json'; a.click();
+        alert('settings.json 을 받았습니다.\n이 파일을 호스팅에 올리면 다음 실행 때 자동 반영됩니다.');
+    }
+    function restoreDefaults(){
+        if(!confirm('내장 기본값으로 되돌릴까요? (이 기기 저장분 삭제)')) return;
+        try{ localStorage.removeItem(SETTINGS_KEY); }catch(e){}
+        masterData = JSON.parse(JSON.stringify(DEFAULT_DATA.master)); updateAllSelects();
+        document.getElementById('policyStatus').innerText='정책 적용: 기본값';
+    }
+
+    function formatNumber(num) { if(!num) return ""; return num.toString().replace(/[^0-9]/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+    function unformatNumber(str) { if(!str) return ""; return str.toString().replace(/,/g, ''); }
+
+    const canvas = document.getElementById('sigCanvas'); const ctx = canvas.getContext('2d'); let isDrawing = false;
+    ctx.lineWidth = 3; ctx.strokeStyle = '#000000'; ctx.lineCap = 'round';
+    function getTouchPos(e) { const rect = canvas.getBoundingClientRect(); return { x: (e.touches[0].clientX - rect.left)*(canvas.width/rect.width), y: (e.touches[0].clientY - rect.top)*(canvas.height/rect.height) }; }
+    function getMousePos(e) { const rect = canvas.getBoundingClientRect(); return { x: (e.clientX - rect.left)*(canvas.width/rect.width), y: (e.clientY - rect.top)*(canvas.height/rect.height) }; }
+    canvas.addEventListener('mousedown', (e) => { isDrawing = true; const p = getMousePos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); });
+    canvas.addEventListener('mousemove', (e) => { if(!isDrawing) return; const p = getMousePos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); });
+    canvas.addEventListener('mouseup', () => isDrawing = false);
+    canvas.addEventListener('touchstart', (e) => { isDrawing = true; const p = getTouchPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); e.preventDefault(); }, {passive: false});
+    canvas.addEventListener('touchmove', (e) => { if(!isDrawing) return; const p = getTouchPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); }, {passive: false});
+    canvas.addEventListener('touchend', () => isDrawing = false);
+
+    function clearSigCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+    function saveSignature() { currentSignatureData = canvas.toDataURL(); document.getElementById('sigPreview').innerHTML = `<img src="${currentSignatureData}">`; closeModal('sigModal'); }
+
+    function openBaseModal(target, title) {
+        currentModalTarget = target;
+        document.getElementById('baseModalTitle').innerText = `[${title}] 추가`;
+        document.getElementById('baseModalInput').value = '';
+        renderBaseModalList();
+        document.getElementById('baseModal').style.display = 'flex';
+    }
+    function renderBaseModalList() {
+        const d = document.getElementById('baseModalList');
+        if (!isLoggedIn) { d.style.display = 'none'; d.innerHTML = ''; return; }
+        d.style.display = 'block';
+        const items = masterData[currentModalTarget] || [];
+        if (!items.length) { d.innerHTML = '<div class="mm-empty">등록된 항목이 없습니다.</div>'; return; }
+        d.innerHTML = '<div class="mm-head">등록 항목 (× 클릭 시 삭제)</div>' + items.map((v,i)=>`<div class="mm-row"><span></span><button class="mm-del" data-i="${i}">×</button></div>`).join('');
+        const rows = d.querySelectorAll('.mm-row'); items.forEach((v,i)=>rows[i].querySelector('span').textContent = v);
+        d.querySelectorAll('.mm-del').forEach(b=>b.onclick=()=>deleteMasterItem(currentModalTarget, parseInt(b.dataset.i)));
+    }
+    function deleteMasterItem(target, index) {
+        const items = masterData[target] || []; const name = items[index];
+        if (!confirm(`'${name}' 항목을 삭제하시겠습니까?`)) return;
+        items.splice(index, 1);
+        updateAllSelects();
+        renderBaseModalList();
+    }
+
+    function openTierModal() {
+        document.getElementById('newTierName').value = '';
+        document.getElementById('newTierAmount').value = '';
+        document.getElementById('newTierDiscount').value = '';
+        document.getElementById('tierModal').style.display = 'flex';
+    }
+
+    function openSigModal() { clearSigCanvas(); document.getElementById('sigModal').style.display = 'flex'; }
+    function openDeleteModal() { if(!document.querySelector('input[name="rowSelect"]:checked')) return alert('삭제할 항목을 선택해 주세요.'); document.getElementById('deleteConfirmModal').style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    function saveBaseModal() {
+        const val = document.getElementById('baseModalInput').value.trim(); if(!val) return;
+        let selectId = currentModalTarget;
+        if(currentModalTarget === 'designated') selectId = 'designatedSelect';
+        else if(currentModalTarget === 'excluded') selectId = 'excludedSelect';
+        
+        if(!masterData[currentModalTarget].includes(val)) {
+            masterData[currentModalTarget].push(val);
+            const sel = document.getElementById(selectId);
+            if(sel) {
+                const opt = document.createElement('option'); opt.value = val; opt.text = val;
+                sel.add(opt); sel.value = val;
+            }
+            if(currentModalTarget === 'designated' || currentModalTarget === 'excluded') addTag(currentModalTarget);
+        }
+        closeModal('baseModal');
+    }
+
+    function saveTierModal() {
+        const name = document.getElementById('newTierName').value.trim(); const amt = unformatNumber(document.getElementById('newTierAmount').value.trim()); const dc = document.getElementById('newTierDiscount').value.trim();
+        if(name) { masterData.tier[name] = { amount: amt, discount: dc }; const sel = document.getElementById('tier'); const opt = document.createElement('option'); opt.value = name; opt.text = name; sel.add(opt); sel.value = name; applyTierData(); closeModal('tierModal'); }
+    }
+    function applyTierData() { const t = masterData.tier[document.getElementById('tier').value]; if(t) { document.getElementById('amount').value = formatNumber(t.amount); document.getElementById('discount').value = t.discount; } }
+
+    function addTag(type) {
+        const sel = document.getElementById(type + 'Select');
+        if(sel.value && (type === 'designated' ? !selectedDesignated.includes(sel.value) : !selectedExcluded.includes(sel.value))) {
+            if(type === 'designated') selectedDesignated.push(sel.value); else selectedExcluded.push(sel.value); renderTags(type);
+        }
+        sel.value = "";
+    }
+    function renderTags(type) { const list = (type === 'designated' ? selectedDesignated : selectedExcluded); document.getElementById(type + 'Tags').innerHTML = list.map(v => `<div class="tag ${type === 'excluded'?'exclude':''}">${v}<span onclick="removeTag('${type}','${v}')">×</span></div>`).join(''); }
+    function removeTag(t, v) { if(t === 'designated') selectedDesignated = selectedDesignated.filter(x => x !== v); else selectedExcluded = selectedExcluded.filter(x => x !== v); renderTags(t); }
+
+    function showDetailPopup(row) {
+        const r = row.cells;
+        document.getElementById('detCustomer').innerText = r[1].innerText;
+        document.getElementById('detPeriod').innerText = r[2].innerText;
+        document.getElementById('detTier').innerText = r[3].innerText;
+        document.getElementById('detDiscount').innerText = r[4].innerText;
+        document.getElementById('detManager').innerText = "담당: " + r[5].innerText;
+        document.getElementById('detDesignated').innerText = r[6].innerText || '없음';
+        document.getElementById('detExcluded').innerText = r[7].innerText || '없음';
+        document.getElementById('detEvalPeriod').innerText = r[8].innerText || '없음';
+        document.getElementById('detAmount').innerText = formatNumber(row.getAttribute('data-raw-amt')) + " 원";
+        document.getElementById('detailModal').style.display = 'flex';
+    }
+
+    function addTableRow() {
+        const cust = document.getElementById('customer').value; if(!cust) return alert('업체 선택 필수');
+        const tbody = document.getElementById('tableBody'); const row = tbody.insertRow();
+        const rawAmt = unformatNumber(document.getElementById('amount').value);
+        row.setAttribute('data-raw-amt', rawAmt);
+        row.setAttribute('data-notes', document.getElementById('notes').value);
+        row.setAttribute('data-sig', currentSignatureData);
+        row.ondblclick = function() { showDetailPopup(this); }; 
+        const hasSig = currentSignatureData ? "⭕" : "❌";
+        row.innerHTML = `<td><input type="radio" name="rowSelect" checked></td><td>${cust}</td><td>${document.getElementById('period').value}</td><td>${document.getElementById('tier').value}</td><td>${document.getElementById('discount').value}%</td><td>${document.getElementById('manager').value}</td><td>${selectedDesignated.join(', ')}</td><td>${selectedExcluded.join(', ')}</td><td>${document.getElementById('evalPeriod').value}</td><td>${document.getElementById('bizNo').value}</td><td>${document.getElementById('clientRep').value}</td><td>${document.getElementById('clientAddr').value}</td><td>${hasSig}</td>`;
+        currentSignatureData = ''; document.getElementById('sigPreview').innerHTML = `<span style="color:#aaa; font-size:12px;">서명 없음</span>`;
+    }
+
+    function deleteSelectedRow() {
+        const checkedRadio = document.querySelector('input[name="rowSelect"]:checked');
+        if(!checkedRadio) return alert('항목 선택 필요');
+        checkedRadio.closest('tr').remove(); closeModal('deleteConfirmModal');
+    }
+
+    function openPdfContractPopup() {
+        const sel = document.querySelector('input[name="rowSelect"]:checked');
+        let d;
+        if (sel) {
+            const r = sel.closest('tr'); const c = r.cells;
+            d = { cust:c[1].innerText, period:c[2].innerText, tier:c[3].innerText, discount:c[4].innerText, amount:r.getAttribute('data-raw-amt'), designated:c[6].innerText, excluded:c[7].innerText, evalPeriod:c[8].innerText, bizNo:c[9].innerText, clientRep:c[10].innerText, clientAddr:c[11].innerText, notes:r.getAttribute('data-notes'), sig:r.getAttribute('data-sig') };
+        } else {
+            const dc = document.getElementById('discount').value;
+            d = { cust:document.getElementById('customer').value, period:document.getElementById('period').value, tier:document.getElementById('tier').value, discount: dc?dc+'%':'', amount:unformatNumber(document.getElementById('amount').value), designated:selectedDesignated.join(', '), excluded:selectedExcluded.join(', '), evalPeriod:document.getElementById('evalPeriod').value, bizNo:document.getElementById('bizNo').value, clientRep:document.getElementById('clientRep').value, clientAddr:document.getElementById('clientAddr').value, notes:document.getElementById('notes').value, sig:currentSignatureData };
+        }
+        
+        const DEFAULT_NOTE = '본 약정의 약정금액(목표)는 각각의 브랜드를 기준으로 설정 브랜드별 실적을 평가한다.\n지정브랜드는 약정당 최대 2개까지 지정가능하며 약정금액또한 지정브랜드 실적의 합산으로 평가 한다.';
+        
+        document.getElementById('pdfCustName').innerText = d.cust || '________';
+        document.getElementById('pdfSignCustName').innerText = d.cust || '________';
+        document.getElementById('pdfPeriod').innerText = d.period || '없음';
+        document.getElementById('pdfTier').innerText = d.tier || '없음';
+        document.getElementById('pdfDiscount').innerText = d.discount || '없음';
+        document.getElementById('pdfAmount').innerText = d.amount ? formatNumber(d.amount) : '없음';
+        document.getElementById('pdfDesignated').innerText = d.designated || '없음';
+        document.getElementById('pdfExcluded').innerText = d.excluded || '없음';
+        document.getElementById('pdfEvalPeriod').innerText = d.evalPeriod || '없음';
+        document.getElementById('pdfNotes').innerText = (d.notes && d.notes.trim() && d.notes.trim() !== '없음') ? d.notes : DEFAULT_NOTE;
+        document.getElementById('pdfSignBizNo').innerText = d.bizNo || '-';
+        document.getElementById('pdfSignRepName').innerText = d.clientRep || '-';
+        document.getElementById('pdfSignAddr').innerText = d.clientAddr || '-';
+        document.getElementById('pdfSigImgWrap').innerHTML = d.sig ? `<img src="${d.sig}">` : '';
+        document.getElementById('pdfDocumentOverlay').style.display = 'flex';
+    }
+
+    function savePdfContract() {
+        const element = document.getElementById('pdfPrintArea');
+        const options = { margin: 10, filename: `약정서_${document.getElementById('pdfCustName').innerText}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 3, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true } };
+        html2pdf().set(options).from(element).save();
+    }
+
+    function saveAsJson() {
+        const tableRows = []; 
+        document.querySelectorAll("#tableBody tr").forEach(tr => {
+            const data = { cells: Array.from(tr.cells).map(c => c.innerText), rawAmt: tr.getAttribute('data-raw-amt'), notes: tr.getAttribute('data-notes'), sig: tr.getAttribute('data-sig') };
+            tableRows.push(data);
+        });
+        const data = { master: masterData, rows: tableRows };
+        const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `약정데이터_V19.json`; a.click();
+    }
+
+    function loadFromJson(e) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const parsed = JSON.parse(event.target.result); 
+            masterData = parsed.master; 
+            if(!masterData.users) masterData.users = { "admin": "hq1234" };
+            updateAllSelects();
+            const tbody = document.getElementById('tableBody'); tbody.innerHTML = '';
+            parsed.rows.forEach(r => {
+                const row = tbody.insertRow();
+                row.setAttribute('data-raw-amt', r.rawAmt); row.setAttribute('data-notes', r.notes); row.setAttribute('data-sig', r.sig);
+                row.ondblclick = function() { showDetailPopup(this); };
+                row.innerHTML = `<td><input type="radio" name="rowSelect"></td><td>${r.cells[1]}</td><td>${r.cells[2]}</td><td>${r.cells[3]}</td><td>${r.cells[4]}</td><td>${r.cells[5]}</td><td>${r.cells[6]}</td><td>${r.cells[7]}</td><td>${r.cells[8]}</td><td>${r.cells[9]}</td><td>${r.cells[10]}</td><td>${r.cells[11]}</td><td>${r.cells[12]}</td>`;
+            });
+            alert('데이터 로드 완료');
+        };
+        reader.readAsText(e.target.files[0]);
+    }
+
+    function updateAllSelects() {
+        const map = { period: 'period', designated: 'designatedSelect', excluded: 'excludedSelect', manager: 'manager', evalPeriod: 'evalPeriod' };
+        for(let k in map) {
+            const sel = document.getElementById(map[k]);
+            if(sel) sel.innerHTML = `<option value="">선택하세요</option>` + (masterData[k] || []).map(v => `<option value="${v}">${v}</option>`).join('');
+        }
+        const tierSel = document.getElementById('tier');
+        tierSel.innerHTML = `<option value="">구간 선택</option>` + Object.keys(masterData.tier).map(k => `<option value="${k}">${k}</option>`).join('');
+    }
+
+    // === 할증계산기 모달 열기 및 데이터 세팅 ===
+    function openSurchargeModal() {
+        // 입력창 및 결과창 초기화
+        document.getElementById('surSalesAmount').value = '';
+        document.getElementById('surResult').innerText = '0 원';
+        
+        // 현재 masterData에 등록된 약정구간(tier) 데이터를 드롭다운에 세팅
+        const sel = document.getElementById('surTierSelect');
+        sel.innerHTML = '<option value="">구간 선택</option>';
+        for (let t in masterData.tier) {
+            const discount = masterData.tier[t].discount;
+            sel.innerHTML += `<option value="${discount}">${t}구간 (할인율: ${discount}%)</option>`;
+        }
+        
+        // 모달창 띄우기
+        document.getElementById('surchargeModal').style.display = 'flex';
+    }
+
+    // === 할증 금액 계산 ===
+    function calculateSurcharge() {
+        // 콤마가 제거된 순수 숫자 문자열 가져오기
+        const amountStr = unformatNumber(document.getElementById('surSalesAmount').value);
+        const discountRate = document.getElementById('surTierSelect').value;
+        
+        if (!amountStr || isNaN(amountStr)) {
+            return alert('매출금액을 정확히 입력해주세요.');
+        }
+        if (!discountRate) {
+            return alert('약정구간을 선택해주세요.');
+        }
+        
+        // 계산식: 매출금액 * (할인율 / 100)
+        const amount = parseInt(amountStr, 10);
+        const rate = parseFloat(discountRate) / 100;
+        const surcharge = Math.floor(amount * rate); // 소수점 버림 처리
+        
+        // 결과창에 콤마 포맷 적용하여 출력
+        document.getElementById('surResult').innerText = formatNumber(surcharge) + ' 원';
+    }
+
+    if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
+</script>
+</body>
+</html>
