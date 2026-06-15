@@ -286,6 +286,9 @@
             📁 DB등록(엑셀)
             <input type="file" id="dbUploader" accept=".xlsx, .xls, .csv" style="display:none;" onchange="handleExcelUpload(event)">
         </label>
+        
+        <button id="dbExportBtn" class="btn-login" style="flex:1; background:#004D40; display:none;" onclick="exportCustomerDB()">⬇ DB 파일생성(배포용)</button>
+        
         <button class="btn-login" style="background:#d32f2f; flex:1;" onclick="openDeleteModal()">선택삭제</button>
         <button class="btn-login" style="background:#1976D2; flex:1;" onclick="openPdfContractPopup()">약정서</button>
         <button class="btn-login" style="background:#FF9800; flex:1;" onclick="saveAsJson()">양식저장</button>
@@ -512,6 +515,10 @@
         const dbBtn = document.getElementById('dbUploadBtn');
         if(dbBtn) dbBtn.style.display = isLoggedIn ? 'block' : 'none';
 
+        // 관리자 로그인 시에만 [DB 파일생성(배포용)] 버튼 노출
+        const dbExportBtn = document.getElementById('dbExportBtn');
+        if(dbExportBtn) dbExportBtn.style.display = isLoggedIn ? 'block' : 'none';
+
         // 관리자 로그인 시에만 [사용자 관리] 버튼 노출
         const userBtn = document.getElementById('userManageBtn');
         if(userBtn) userBtn.style.display = isLoggedIn ? 'inline-block' : 'none';
@@ -520,12 +527,45 @@
     }
 
 
-    // === 로컬 스토리지에서 기존 거래처 DB 불러오기 ===
+    // === 서버에서 최신 DB 연동 및 로컬 스토리지 활용 ===
     function initCustomerDB() {
+        // 1. 앱을 빠르게 켜기 위해 기존에 기기에 저장된(Local) DB를 먼저 가져옵니다.
         const savedDB = localStorage.getItem('kb1_customer_db');
         if(savedDB) {
             customerDB = JSON.parse(savedDB);
         }
+        
+        // 2. 호스팅 서버에 올려둔 최신 DB 파일(customer_db.json)을 백그라운드에서 불러와 덮어씌웁니다.
+        fetch('customer_db.json?_=' + Date.now(), {cache:'no-store'})
+            .then(r => {
+                if(!r.ok) throw new Error('서버에 DB 파일이 없습니다.');
+                return r.json();
+            })
+            .then(data => {
+                if(data && data.length > 0) {
+                    customerDB = data; // 데이터 덮어쓰기
+                    localStorage.setItem('kb1_customer_db', JSON.stringify(customerDB)); // 로컬에도 갱신
+                    console.log('✅ 서버에서 최신 거래처 DB를 동기화했습니다.');
+                }
+            })
+            .catch(err => {
+                console.log('⚠️ 서버 통신 실패 또는 아직 배포된 파일이 없습니다. (기존 데이터 유지)');
+            });
+    }
+
+    // === 관리자가 올린 엑셀을 JSON 파일로 만들어주는 기능 ===
+    function exportCustomerDB() {
+        if (!customerDB || customerDB.length === 0) {
+            return alert('데이터가 없습니다. 먼저 [DB등록(엑셀)]을 진행해주세요.');
+        }
+        
+        const blob = new Blob([JSON.stringify(customerDB)], {type: 'application/json'});
+        const a = document.createElement('a'); 
+        a.href = URL.createObjectURL(blob); 
+        a.download = 'customer_db.json'; 
+        a.click();
+        
+        alert('customer_db.json 파일이 다운로드 되었습니다.\n이 파일을 호스팅 서버(index.html과 같은 위치)에 업로드해주세요.');
     }
 
     // === 엑셀(.xlsx) 파일 업로드 시 거래처 DB 자동 등록 ===
@@ -564,7 +604,7 @@
                 if(newDB.length > 0) {
                     customerDB = newDB;
                     localStorage.setItem('kb1_customer_db', JSON.stringify(customerDB));
-                    alert(`성공! 총 ${customerDB.length}건의 거래처 데이터가 등록되었습니다.`);
+                    alert(`성공! 총 ${customerDB.length}건의 거래처 데이터가 로컬에 등록되었습니다.\n다른 사용자에게 배포하려면 [DB 파일생성(배포용)] 버튼을 눌러주세요.`);
                 } else {
                     alert('데이터를 읽어올 수 없습니다. 엑셀의 첫 번째 줄에 "거래처코드", "거래처명", "대표자", "사업자번호", "주소" 가 있는지 확인해주세요.');
                 }
