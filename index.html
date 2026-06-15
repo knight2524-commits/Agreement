@@ -194,11 +194,7 @@
                 <div class="input-group">
                     <label>지정브랜드</label>
                     <div class="input-wrapper">
-                        <!-- 검색 가능한 브랜드 입력창 적용 -->
-                        <div class="autocomplete-wrapper" style="flex:1;">
-                            <input type="text" id="designatedInput" placeholder="브랜드 검색 및 선택" autocomplete="off">
-                            <div id="designatedDropdown" class="autocomplete-list"></div>
-                        </div>
+                        <select id="designatedSelect" onchange="addTag('designated')"><option value="">브랜드 선택</option></select>
                         <button class="admin-plus" onclick="openBaseModal('designated', '지정브랜드')">+</button>
                     </div>
                 </div>
@@ -291,6 +287,7 @@
             <input type="file" id="dbUploader" accept=".xlsx, .xls, .csv" style="display:none;" onchange="handleExcelUpload(event)">
         </label>
         
+        <!-- ▼ 새로 추가된 관리자 전용 DB 배포 파일 생성 버튼 ▼ -->
         <button id="dbExportBtn" class="btn-login" style="flex:1; background:#004D40; display:none;" onclick="exportCustomerDB()">⬇ DB 파일생성(배포용)</button>
         
         <button class="btn-login" style="background:#d32f2f; flex:1;" onclick="openDeleteModal()">선택삭제</button>
@@ -339,12 +336,13 @@
     </div>
 </div>
 
+
 <div id="pdfDocumentOverlay" class="modal-overlay">
     <div class="pdf-modal-content">
         <div id="pdfPrintArea" class="contract-paper">
             <div class="contract-title">수입제품 공급약정서</div>
             <div class="contract-parties-top">공급자: (주)KB-ONE (이하 "갑"이라 한다)<br>공급받는자: <span id="pdfCustName"></span> (이하 "을"이라 한다)</div>
-            <div class="contract-body">주식회사 KB-ONE(이하 "갑")과 공급받는자(이하 "을")는 수입작업공구 공급 거래와 관련하여 상호 신뢰를 바탕으로 다음과 같이 공급 약정을 체결 편집한다.<br><br><strong>제 1 조 (목적)</strong> 본 약정서는 "갑"이 수입하여 공급하는 제품을 "을"에게 안정적으로 공급하고, "을"은 약정 조건을 준수함으로써 상호 이익을 증진시키는 데 그 목적이 있다.<br><br><strong>제 2 조 (약정 조건 및 공급 혜택)</strong><br>1. 약정기간 동안 "을"의 총 매입 목표금액 및 할인율은 아래 표의 기준을 적용한다.<br>2. "을"이 지정된 약정 브랜드 발주진행시, "갑"은 합의된 할인율(%)을 적용 출고를 진행한다.<br>3. "을"이 지정된 약정 목표를 미달성시, "갑"은 합의된 할인율(%)을 할증적용 한다.</div>
+            <div class="contract-body">주식회사 KB-ONE(이하 "갑")과 공급받는자(이하 "을")는 수입작업공구 공급 거래와 관련하여 상호 신뢰를 바탕으로 다음과 같이 공급 약정을 체결한다.<br><br><strong>제 1 조 (목적)</strong> 본 약정서는 "갑"이 수입하여 공급하는 제품을 "을"에게 안정적으로 공급하고, "을"은 약정 조건을 준수함으로써 상호 이익을 증진시키는 데 그 목적이 있다.<br><br><strong>제 2 조 (약정 조건 및 공급 혜택)</strong><br>1. 약정기간 동안 "을"의 총 매입 목표금액 및 할인율은 아래 표의 기준을 적용한다.<br>2. "을"이 지정된 약정 브랜드 발주진행시, "갑"은 합의된 할인율(%)을 적용 출고를 진행한다.<br>3. "을"이 지정된 약정 목표를 미달성시, "갑"은 합의된 할인율(%)을 할증적용 한다.</div>
             <table class="contract-table"><thead><tr><th>약정기간</th><th>평가기간</th><th>약정구간</th><th>약정금액(원)</th><th>약정 할인율</th></tr></thead><tbody><tr><td id="pdfPeriod"></td><td id="pdfEvalPeriod"></td><td id="pdfTier"></td><td id="pdfAmount" style="font-weight: bold;"></td><td id="pdfDiscount" style="font-weight: bold; color: #1976D2;"></td></tr></tbody></table>
             <div class="contract-body" style="text-align: justify;"><strong>제 3 조 (가격인상 및 출고조정)</strong><br>1. 가격인상적용시 인상적용 요율을 동일하게 적용진행한다.<br>2. 갑의 해당 브랜드의 공급사 사정으로 인한 적정 재고 보유량의 문제상황 발생시 상호간의 협의하에 약정달성기간의 유예설정가능하다(단,을의 일방적인 요청으로 미달성진행시 2조3항을 적용 할인된 출고분을 할정적용한다)<br><br><strong>제 4 조 (브랜드 취급 범위)</strong><br>1. <strong>지정 브랜드:</strong> <span id="pdfDesignated" style="color:#1976D2;"></span> / 2. <strong>제외 품목:</strong> <span id="pdfExcluded" style="color:#d32f2f;"></span><br><br><strong>제 5 조 (기타 및 특약사항)</strong><br><div id="pdfNotes" style="min-height: 40px; background: #fafafa; padding: 8px; border: 1px solid #ddd; white-space: pre-wrap; font-size:12px;"></div></div>
             <div class="contract-sign-zone"><div class="sign-block"><strong>공급자 ("갑")</strong><br>회사명: (주)케이비원 / 사업자 등록번호: 504-81-15357<br>주소: 대구광역시 중구 서야동 99-1<br>업종: 도,소매 / 업태: 일반철물 및 수공구<br>대표자: 김정도 (인)</div><div class="sign-block" style="text-align: right;"><strong>공급받는자 ("을")</strong><br>회사명: <span id="pdfSignCustName"></span> / 사업자번호: <span id="pdfSignBizNo"></span><br>주소: <span id="pdfSignAddr"></span><br>대표자: <span id="pdfSignRepName" style="font-weight:bold;"></span> <span id="pdfSigImgWrap" class="inline-sig-wrap"></span>(인)</div></div>
@@ -374,6 +372,7 @@
 <div id="baseModal" class="modal-overlay"><div class="modal-content"><h3 id="baseModalTitle">항목 추가</h3><input type="text" id="baseModalInput"><div id="baseModalList" class="manage-list"></div><div style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;"><button onclick="closeModal('baseModal')">취소</button><button onclick="saveBaseModal()" style="background:#2e7d32; color:white; border:none; padding:8px 15px; border-radius:5px;">저장</button></div></div></div>
 <div id="tierModal" class="modal-overlay"><div class="modal-content"><h3>약정구간 설정</h3><input type="text" id="newTierName" placeholder="구간명"><input type="text" id="newTierAmount" placeholder="금액" oninput="this.value = formatNumber(unformatNumber(this.value))"><input type="text" id="newTierDiscount" placeholder="할인율 (%)"><div style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;"><button onclick="closeModal('tierModal')">취소</button><button onclick="saveTierModal()" style="background:#2e7d32; color:white; border:none; padding:8px 15px; border-radius:5px;">저장</button></div></div></div>
 
+<!-- 할증계산기 팝업 모달 추가 -->
 <div id="surchargeModal" class="modal-overlay">
     <div class="modal-content" style="width: 350px;">
         <h3 style="margin-top:0; color:#FF9800;">🧮 할증 계산기</h3>
@@ -403,10 +402,10 @@
 <script>
     let customerDB = [];
 
-    // === 기본 데이터 구조 ===
+    // === 기본 데이터 구조에 'users' (계정 관리) 객체 추가 ===
     const DEFAULT_DATA = {
         "master": {
-            "users": { "admin": "hq1234" },
+            "users": { "admin": "hq1234" }, // 기본 로그인 계정
             "customer":[],"period":["2026년 [하반기]"],"designated":["KEIBA","KDS","EBISU","SHINWA","MOKUBA"],"excluded":[],"manager":["최재환 부장","정재욱 차장","김석주 과장","변기훈 과장","박갑열 과장","박영진 과장","이영진 과장","이창문 과장","이승엽 부장","정재훈 차장","남기원 차장","남상협 차장","김성진 차장","송형섭 과장"],"bizNo":[],"clientRep":[],"clientAddr":[],"evalPeriod":["분기(3개월)","월간(1개월)"],"tier":{"S":{"amount":"30000000","discount":"18"},"A":{"amount":"15000000","discount":"12"},"B":{"amount":"10000000","discount":"8"}}
         },
         "rows": []
@@ -416,10 +415,14 @@
     let selectedDesignated = [], selectedExcluded = [], isLoggedIn = false, currentModalTarget = '';
     let currentSignatureData = ''; 
 
+    // === 앱 실행 시 가장 먼저 확인 ===
     window.onload = function() { 
-        loadSettings(true); 
+        loadSettings(true); // 서버 및 로컬스토리지를 불러와 masterData 최신화
+        
+        // 데이터에 사용자 정보가 없다면 기본값 세팅
         if (!masterData.users) masterData.users = { "admin": "hq1234" };
 
+        // 접속(초기 로그인) 여부 체크
         if (!sessionStorage.getItem('appUnlocked')) {
             document.getElementById('appLoginOverlay').style.display = 'flex';
         }
@@ -429,6 +432,7 @@
         updateAuthUI(); 
     };
 
+    // === 1. 초기 앱 접속 로그인 기능 ===
     function attemptAppLogin() {
         const id = document.getElementById('appLoginId').value.trim();
         const pw = document.getElementById('appLoginPw').value.trim();
@@ -443,6 +447,7 @@
         }
     }
 
+    // === 2. 사용자 계정 추가/관리 기능 (관리자 전용) ===
     function openUserManageModal() {
         renderUserList();
         document.getElementById('userManageModal').style.display = 'flex';
@@ -474,7 +479,7 @@
         document.getElementById('newUserId').value = '';
         document.getElementById('newUserPw').value = '';
         renderUserList();
-        saveLocal(collectSettings()); 
+        saveLocal(collectSettings()); // 추가 후 로컬 스토리지 자동 저장
     }
 
     function deleteUser(id) {
@@ -486,8 +491,10 @@
         saveLocal(collectSettings());
     }
 
+    // === 관리자 로그인 및 UI 업데이트 제어 ===
     function toggleLogin() {
         if (!isLoggedIn) {
+            // 관리자 비밀번호 입력 (2014038)
             if (prompt("관리자 비밀번호를 입력하세요:") === "2014038") { 
                 isLoggedIn = true; 
                 document.getElementById('loginBtn').innerText = "로그아웃"; 
@@ -503,26 +510,34 @@
     }
     
     function updateAuthUI() {
+        // 관리자 로그인 시에만 +버튼 노출
         document.querySelectorAll('.admin-plus, .public-plus').forEach(btn => btn.style.display = isLoggedIn ? 'inline-block' : 'none');
         
+        // 관리자 로그인 시에만 [DB등록(엑셀)] 버튼 노출
         const dbBtn = document.getElementById('dbUploadBtn');
         if(dbBtn) dbBtn.style.display = isLoggedIn ? 'block' : 'none';
 
+        // 관리자 로그인 시에만 [DB 파일생성(배포용)] 버튼 노출
         const dbExportBtn = document.getElementById('dbExportBtn');
         if(dbExportBtn) dbExportBtn.style.display = isLoggedIn ? 'block' : 'none';
 
+        // 관리자 로그인 시에만 [사용자 관리] 버튼 노출
         const userBtn = document.getElementById('userManageBtn');
         if(userBtn) userBtn.style.display = isLoggedIn ? 'inline-block' : 'none';
 
         if (document.getElementById('baseModal').style.display === 'flex') renderBaseModalList();
     }
 
+
+    // === 서버에서 최신 DB 연동 및 로컬 스토리지 활용 ===
     function initCustomerDB() {
+        // 1. 앱을 빠르게 켜기 위해 기존에 기기에 저장된(Local) DB를 먼저 가져옵니다.
         const savedDB = localStorage.getItem('kb1_customer_db');
         if(savedDB) {
             customerDB = JSON.parse(savedDB);
         }
         
+        // 2. 호스팅 서버에 올려둔 최신 DB 파일(customer_db.json)을 백그라운드에서 불러와 덮어씌웁니다.
         fetch('customer_db.json?_=' + Date.now(), {cache:'no-store'})
             .then(r => {
                 if(!r.ok) throw new Error('서버에 DB 파일이 없습니다.');
@@ -530,8 +545,8 @@
             })
             .then(data => {
                 if(data && data.length > 0) {
-                    customerDB = data; 
-                    localStorage.setItem('kb1_customer_db', JSON.stringify(customerDB)); 
+                    customerDB = data; // 데이터 덮어쓰기
+                    localStorage.setItem('kb1_customer_db', JSON.stringify(customerDB)); // 로컬에도 갱신
                     console.log('✅ 서버에서 최신 거래처 DB를 동기화했습니다.');
                 }
             })
@@ -540,6 +555,7 @@
             });
     }
 
+    // === 관리자가 올린 엑셀을 JSON 파일로 만들어주는 기능 ===
     function exportCustomerDB() {
         if (!customerDB || customerDB.length === 0) {
             return alert('데이터가 없습니다. 먼저 [DB등록(엑셀)]을 진행해주세요.');
@@ -554,6 +570,7 @@
         alert('customer_db.json 파일이 다운로드 되었습니다.\n이 파일을 호스팅 서버(index.html과 같은 위치)에 업로드해주세요.');
     }
 
+    // === 엑셀(.xlsx) 파일 업로드 시 거래처 DB 자동 등록 ===
     function handleExcelUpload(event) {
         const file = event.target.files[0];
         if(!file) return;
@@ -601,15 +618,17 @@
         reader.readAsArrayBuffer(file);
     }
 
-    // === 거래처 드롭다운 ===
+    // === 커스텀 드롭다운 표시 로직 (렌더링 30개 제한 및 업체명+코드 다중 검색) ===
     document.getElementById('customer').addEventListener('input', function() {
         const val = this.value.trim();
         const dropdown = document.getElementById('customerDropdown');
         dropdown.innerHTML = '';
+        
         if(!val) { dropdown.style.display = 'none'; return; }
         
         const matched = customerDB.filter(c => 
-            (c.company && c.company.includes(val)) || (c.code && c.code.includes(val))
+            (c.company && c.company.includes(val)) || 
+            (c.code && c.code.includes(val))
         ).slice(0, 30);
         
         if(matched.length > 0) {
@@ -633,48 +652,9 @@
         }
     });
 
-    // === 지정브랜드 드롭다운 (검색 지원) ===
-    document.getElementById('designatedInput').addEventListener('focus', function() { renderDesignatedDropdown(this.value); });
-    document.getElementById('designatedInput').addEventListener('input', function() { renderDesignatedDropdown(this.value); });
-
-    function renderDesignatedDropdown(val) {
-        const dropdown = document.getElementById('designatedDropdown');
-        dropdown.innerHTML = '';
-        val = val.trim().toLowerCase();
-
-        let matched = masterData.designated || [];
-        if(val) { matched = matched.filter(b => b.toLowerCase().includes(val)); }
-
-        if(matched.length > 0) {
-            matched.forEach(b => {
-                const div = document.createElement('div');
-                div.className = 'autocomplete-item';
-                div.innerHTML = `<strong>${b}</strong>`;
-                div.onclick = function() {
-                    document.getElementById('designatedInput').value = ''; 
-                    dropdown.style.display = 'none';
-                    if(!selectedDesignated.includes(b)) {
-                        selectedDesignated.push(b);
-                        renderTags('designated');
-                    }
-                };
-                dropdown.appendChild(div);
-            });
-            dropdown.style.display = 'block';
-        } else {
-            dropdown.style.display = 'none';
-        }
-    }
-
-    // 외부 클릭 시 드롭다운 닫기
     document.addEventListener('click', function(e) {
         if(e.target.id !== 'customer') {
-            const cd = document.getElementById('customerDropdown');
-            if(cd) cd.style.display = 'none';
-        }
-        if(e.target.id !== 'designatedInput') {
-            const dd = document.getElementById('designatedDropdown');
-            if(dd) dd.style.display = 'none';
+            document.getElementById('customerDropdown').style.display = 'none';
         }
     });
 
@@ -767,27 +747,18 @@
 
     function saveBaseModal() {
         const val = document.getElementById('baseModalInput').value.trim(); if(!val) return;
-        
         let selectId = currentModalTarget;
-        if(currentModalTarget === 'designated') selectId = 'designatedInput';
+        if(currentModalTarget === 'designated') selectId = 'designatedSelect';
         else if(currentModalTarget === 'excluded') selectId = 'excludedSelect';
         
         if(!masterData[currentModalTarget].includes(val)) {
             masterData[currentModalTarget].push(val);
-            
             const sel = document.getElementById(selectId);
-            if(sel && sel.tagName === 'SELECT') {
+            if(sel) {
                 const opt = document.createElement('option'); opt.value = val; opt.text = val;
                 sel.add(opt); sel.value = val;
             }
-            
-            if(currentModalTarget === 'designated' || currentModalTarget === 'excluded') {
-                if(currentModalTarget === 'designated' && !selectedDesignated.includes(val)) {
-                    selectedDesignated.push(val); renderTags('designated');
-                } else if(currentModalTarget === 'excluded' && !selectedExcluded.includes(val)) {
-                    selectedExcluded.push(val); renderTags('excluded');
-                }
-            }
+            if(currentModalTarget === 'designated' || currentModalTarget === 'excluded') addTag(currentModalTarget);
         }
         closeModal('baseModal');
     }
@@ -796,19 +767,15 @@
         const name = document.getElementById('newTierName').value.trim(); const amt = unformatNumber(document.getElementById('newTierAmount').value.trim()); const dc = document.getElementById('newTierDiscount').value.trim();
         if(name) { masterData.tier[name] = { amount: amt, discount: dc }; const sel = document.getElementById('tier'); const opt = document.createElement('option'); opt.value = name; opt.text = name; sel.add(opt); sel.value = name; applyTierData(); closeModal('tierModal'); }
     }
-    
     function applyTierData() { const t = masterData.tier[document.getElementById('tier').value]; if(t) { document.getElementById('amount').value = formatNumber(t.amount); document.getElementById('discount').value = t.discount; } }
 
     function addTag(type) {
         const sel = document.getElementById(type + 'Select');
-        if(sel && sel.value) {
-            if(type === 'excluded' && !selectedExcluded.includes(sel.value)) {
-                selectedExcluded.push(sel.value); renderTags(type);
-            }
-            sel.value = "";
+        if(sel.value && (type === 'designated' ? !selectedDesignated.includes(sel.value) : !selectedExcluded.includes(sel.value))) {
+            if(type === 'designated') selectedDesignated.push(sel.value); else selectedExcluded.push(sel.value); renderTags(type);
         }
+        sel.value = "";
     }
-    
     function renderTags(type) { const list = (type === 'designated' ? selectedDesignated : selectedExcluded); document.getElementById(type + 'Tags').innerHTML = list.map(v => `<div class="tag ${type === 'excluded'?'exclude':''}">${v}<span onclick="removeTag('${type}','${v}')">×</span></div>`).join(''); }
     function removeTag(t, v) { if(t === 'designated') selectedDesignated = selectedDesignated.filter(x => x !== v); else selectedExcluded = selectedExcluded.filter(x => x !== v); renderTags(t); }
 
@@ -912,8 +879,7 @@
     }
 
     function updateAllSelects() {
-        // designatedSelect는 검색입력창으로 대체되었으므로 맵에서 제외
-        const map = { period: 'period', excluded: 'excludedSelect', manager: 'manager', evalPeriod: 'evalPeriod' };
+        const map = { period: 'period', designated: 'designatedSelect', excluded: 'excludedSelect', manager: 'manager', evalPeriod: 'evalPeriod' };
         for(let k in map) {
             const sel = document.getElementById(map[k]);
             if(sel) sel.innerHTML = `<option value="">선택하세요</option>` + (masterData[k] || []).map(v => `<option value="${v}">${v}</option>`).join('');
@@ -922,10 +888,13 @@
         tierSel.innerHTML = `<option value="">구간 선택</option>` + Object.keys(masterData.tier).map(k => `<option value="${k}">${k}</option>`).join('');
     }
 
+    // === 할증계산기 모달 열기 및 데이터 세팅 ===
     function openSurchargeModal() {
+        // 입력창 및 결과창 초기화
         document.getElementById('surSalesAmount').value = '';
         document.getElementById('surResult').innerText = '0 원';
         
+        // 현재 masterData에 등록된 약정구간(tier) 데이터를 드롭다운에 세팅
         const sel = document.getElementById('surTierSelect');
         sel.innerHTML = '<option value="">구간 선택</option>';
         for (let t in masterData.tier) {
@@ -933,20 +902,29 @@
             sel.innerHTML += `<option value="${discount}">${t}구간 (할인율: ${discount}%)</option>`;
         }
         
+        // 모달창 띄우기
         document.getElementById('surchargeModal').style.display = 'flex';
     }
 
+    // === 할증 금액 계산 ===
     function calculateSurcharge() {
+        // 콤마가 제거된 순수 숫자 문자열 가져오기
         const amountStr = unformatNumber(document.getElementById('surSalesAmount').value);
         const discountRate = document.getElementById('surTierSelect').value;
         
-        if (!amountStr || isNaN(amountStr)) return alert('매출금액을 정확히 입력해주세요.');
-        if (!discountRate) return alert('약정구간을 선택해주세요.');
+        if (!amountStr || isNaN(amountStr)) {
+            return alert('매출금액을 정확히 입력해주세요.');
+        }
+        if (!discountRate) {
+            return alert('약정구간을 선택해주세요.');
+        }
         
+        // 계산식: 매출금액 * (할인율 / 100)
         const amount = parseInt(amountStr, 10);
         const rate = parseFloat(discountRate) / 100;
-        const surcharge = Math.floor(amount * rate); 
+        const surcharge = Math.floor(amount * rate); // 소수점 버림 처리
         
+        // 결과창에 콤마 포맷 적용하여 출력
         document.getElementById('surResult').innerText = formatNumber(surcharge) + ' 원';
     }
 
