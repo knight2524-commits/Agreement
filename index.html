@@ -176,7 +176,7 @@
                     </div>
                 </div>
                 <div class="input-group">
-                    <label>약정기간</label>
+                    <label>약정선택</label>
                     <div class="input-wrapper">
                         <select id="period"><option value="">선택하세요</option></select>
                         <button class="admin-plus" onclick="openBaseModal('period', '기간')">+</button>
@@ -215,7 +215,7 @@
             <div class="form-row">
                 <div class="input-group">
                     <label>할인율(%)</label>
-                    <div class="input-wrapper"><input type="text" id="discount" placeholder="예: 10"></div>
+                    <div class="input-wrapper"><input type="text" id="discount" placeholder="자동입력"></div>
                 </div>
                 <div class="input-group">
                     <label>평가기간</label>
@@ -287,6 +287,7 @@
             <input type="file" id="dbUploader" accept=".xlsx, .xls, .csv" style="display:none;" onchange="handleExcelUpload(event)">
         </label>
         
+        <!-- ▼ 새로 추가된 관리자 전용 DB 배포 파일 생성 버튼 ▼ -->
         <button id="dbExportBtn" class="btn-login" style="flex:1; background:#004D40; display:none;" onclick="exportCustomerDB()">⬇ DB 파일생성(배포용)</button>
         
         <button class="btn-login" style="background:#d32f2f; flex:1;" onclick="openDeleteModal()">선택삭제</button>
@@ -355,7 +356,7 @@
         <div style="border-bottom: 2px solid #2e7d32; padding-bottom: 10px; margin-bottom: 10px;"><h3>약정 상세 내역</h3></div>
         <div id="detManager" style="position: absolute; top: 25px; right: 25px; font-weight: bold; color: #1976D2; background: #e3f2fd; padding: 4px 10px; border-radius: 4px; font-size: 13px;"></div>
         <div style="display: flex; border-bottom: 1px solid #eee; padding: 8px 0; font-size: 14px;"><div style="font-weight: bold; width: 120px; color: #666;">업체명</div><div id="detCustomer" style="flex: 1;"></div></div>
-        <div style="display: flex; border-bottom: 1px solid #eee; padding: 8px 0; font-size: 14px;"><div style="font-weight: bold; width: 120px; color: #666;">약정기간</div><div id="detPeriod" style="flex: 1;"></div></div>
+        <div style="display: flex; border-bottom: 1px solid #eee; padding: 8px 0; font-size: 14px;"><div style="font-weight: bold; width: 120px; color: #666;">약정선택</div><div id="detPeriod" style="flex: 1;"></div></div>
         <div style="display: flex; border-bottom: 1px solid #eee; padding: 8px 0; font-size: 14px;"><div style="font-weight: bold; width: 120px; color: #666;">평가기간</div><div id="detEvalPeriod" style="flex: 1;"></div></div>
         <div style="display: flex; border-bottom: 1px solid #eee; padding: 8px 0; font-size: 14px;"><div style="font-weight: bold; width: 120px; color: #666;">약정구간</div><div id="detTier" style="flex: 1;"></div></div>
         <div style="display: flex; border-bottom: 1px solid #eee; padding: 8px 0; font-size: 14px;"><div style="font-weight: bold; width: 120px; color: #666;">약정금액</div><div id="detAmount" style="flex: 1;"></div></div>
@@ -371,6 +372,7 @@
 <div id="baseModal" class="modal-overlay"><div class="modal-content"><h3 id="baseModalTitle">항목 추가</h3><input type="text" id="baseModalInput"><div id="baseModalList" class="manage-list"></div><div style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;"><button onclick="closeModal('baseModal')">취소</button><button onclick="saveBaseModal()" style="background:#2e7d32; color:white; border:none; padding:8px 15px; border-radius:5px;">저장</button></div></div></div>
 <div id="tierModal" class="modal-overlay"><div class="modal-content"><h3>약정구간 설정</h3><input type="text" id="newTierName" placeholder="구간명"><input type="text" id="newTierAmount" placeholder="금액" oninput="this.value = formatNumber(unformatNumber(this.value))"><input type="text" id="newTierDiscount" placeholder="할인율 (%)"><div style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;"><button onclick="closeModal('tierModal')">취소</button><button onclick="saveTierModal()" style="background:#2e7d32; color:white; border:none; padding:8px 15px; border-radius:5px;">저장</button></div></div></div>
 
+<!-- 할증계산기 팝업 모달 추가 -->
 <div id="surchargeModal" class="modal-overlay">
     <div class="modal-content" style="width: 350px;">
         <h3 style="margin-top:0; color:#FF9800;">🧮 할증 계산기</h3>
