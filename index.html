@@ -183,26 +183,47 @@
                     </div>
                 </div>
             </div>
+            
             <div class="form-row">
                 <div class="input-group">
-                    <label>약정구간</label>
+                    <label>약정구간(A)</label>
                     <div class="input-wrapper">
-                        <select id="tier" onchange="applyTierData()"><option value="">선택하세요</option></select>
+                        <select id="tierA" onchange="applyTierData()"><option value="">선택하세요</option></select>
                         <button class="admin-plus" onclick="openTierModal()">+</button>
                     </div>
                 </div>
                 <div class="input-group">
-                    <label>지정브랜드</label>
+                    <label>지정브랜드(A)</label>
                     <div class="input-wrapper">
-                        <!-- 검색 가능한 브랜드 입력창 적용 -->
                         <div class="autocomplete-wrapper" style="flex:1;">
-                            <input type="text" id="designatedInput" placeholder="브랜드 검색 및 선택" autocomplete="off">
-                            <div id="designatedDropdown" class="autocomplete-list"></div>
+                            <input type="text" id="designatedInputA" placeholder="브랜드 검색 및 선택" autocomplete="off">
+                            <div id="designatedDropdownA" class="autocomplete-list"></div>
                         </div>
                         <button class="admin-plus" onclick="openBaseModal('designated', '지정브랜드')">+</button>
                     </div>
                 </div>
             </div>
+
+            <div class="form-row">
+                <div class="input-group">
+                    <label>약정구간(B)</label>
+                    <div class="input-wrapper">
+                        <select id="tierB" onchange="applyTierData()"><option value="">선택하세요</option></select>
+                        <button class="admin-plus" onclick="openTierModal()">+</button>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>지정브랜드(B)</label>
+                    <div class="input-wrapper">
+                        <div class="autocomplete-wrapper" style="flex:1;">
+                            <input type="text" id="designatedInputB" placeholder="브랜드 검색 및 선택" autocomplete="off">
+                            <div id="designatedDropdownB" class="autocomplete-list"></div>
+                        </div>
+                        <button class="admin-plus" onclick="openBaseModal('designated', '지정브랜드')">+</button>
+                    </div>
+                </div>
+            </div>
+
             <div class="form-row">
                 <div class="input-group">
                     <label>약정금액(원)</label>
@@ -633,14 +654,19 @@
         }
     });
 
-    // === 지정브랜드 드롭다운 (검색 지원) ===
-    document.getElementById('designatedInput').addEventListener('focus', function() { renderDesignatedDropdown(this.value); });
-    document.getElementById('designatedInput').addEventListener('input', function() { renderDesignatedDropdown(this.value); });
+    // === 지정브랜드(A), (B) 드롭다운 이벤트 연동 ===
+    ['A', 'B'].forEach(type => {
+        const input = document.getElementById('designatedInput' + type);
+        if(input) {
+            input.addEventListener('focus', function() { renderDesignatedDropdown(this, 'designatedDropdown' + type); });
+            input.addEventListener('input', function() { renderDesignatedDropdown(this, 'designatedDropdown' + type); });
+        }
+    });
 
-    function renderDesignatedDropdown(val) {
-        const dropdown = document.getElementById('designatedDropdown');
+    function renderDesignatedDropdown(inputElem, dropdownId) {
+        const dropdown = document.getElementById(dropdownId);
         dropdown.innerHTML = '';
-        val = val.trim().toLowerCase();
+        let val = inputElem.value.trim().toLowerCase();
 
         let matched = masterData.designated || [];
         if(val) { matched = matched.filter(b => b.toLowerCase().includes(val)); }
@@ -651,10 +677,10 @@
                 div.className = 'autocomplete-item';
                 div.innerHTML = `<strong>${b}</strong>`;
                 div.onclick = function() {
-                    document.getElementById('designatedInput').value = ''; 
+                    inputElem.value = ''; // 입력창 텍스트 비우기
                     dropdown.style.display = 'none';
                     if(!selectedDesignated.includes(b)) {
-                        selectedDesignated.push(b);
+                        selectedDesignated.push(b); // 기존처럼 하단 태그 풀에 통합 추가
                         renderTags('designated');
                     }
                 };
@@ -672,9 +698,11 @@
             const cd = document.getElementById('customerDropdown');
             if(cd) cd.style.display = 'none';
         }
-        if(e.target.id !== 'designatedInput') {
-            const dd = document.getElementById('designatedDropdown');
-            if(dd) dd.style.display = 'none';
+        if(!e.target.id.startsWith('designatedInput')) {
+            const dda = document.getElementById('designatedDropdownA');
+            const ddb = document.getElementById('designatedDropdownB');
+            if(dda) dda.style.display = 'none';
+            if(ddb) ddb.style.display = 'none';
         }
     });
 
@@ -769,8 +797,7 @@
         const val = document.getElementById('baseModalInput').value.trim(); if(!val) return;
         
         let selectId = currentModalTarget;
-        if(currentModalTarget === 'designated') selectId = 'designatedInput';
-        else if(currentModalTarget === 'excluded') selectId = 'excludedSelect';
+        if(currentModalTarget === 'excluded') selectId = 'excludedSelect';
         
         if(!masterData[currentModalTarget].includes(val)) {
             masterData[currentModalTarget].push(val);
@@ -793,11 +820,39 @@
     }
 
     function saveTierModal() {
-        const name = document.getElementById('newTierName').value.trim(); const amt = unformatNumber(document.getElementById('newTierAmount').value.trim()); const dc = document.getElementById('newTierDiscount').value.trim();
-        if(name) { masterData.tier[name] = { amount: amt, discount: dc }; const sel = document.getElementById('tier'); const opt = document.createElement('option'); opt.value = name; opt.text = name; sel.add(opt); sel.value = name; applyTierData(); closeModal('tierModal'); }
+        const name = document.getElementById('newTierName').value.trim(); 
+        const amt = unformatNumber(document.getElementById('newTierAmount').value.trim()); 
+        const dc = document.getElementById('newTierDiscount').value.trim();
+        if(name) { 
+            masterData.tier[name] = { amount: amt, discount: dc }; 
+            updateAllSelects(); 
+            document.getElementById('tierA').value = name; 
+            applyTierData(); 
+            closeModal('tierModal'); 
+        }
     }
     
-    function applyTierData() { const t = masterData.tier[document.getElementById('tier').value]; if(t) { document.getElementById('amount').value = formatNumber(t.amount); document.getElementById('discount').value = t.discount; } }
+    // === 약정구간(A), (B) 선택 시 금액 합산 및 할인율 통합 표시 ===
+    function applyTierData() { 
+        let totalAmt = 0;
+        let discounts = [];
+        
+        const tierA = document.getElementById('tierA').value;
+        const tA = masterData.tier[tierA];
+        if(tA) { totalAmt += parseInt(tA.amount || 0); discounts.push(tA.discount + '%'); }
+        
+        const tierB = document.getElementById('tierB').value;
+        const tB = masterData.tier[tierB];
+        if(tB) { totalAmt += parseInt(tB.amount || 0); discounts.push(tB.discount + '%'); }
+        
+        if(tA || tB) {
+            document.getElementById('amount').value = formatNumber(totalAmt);
+            document.getElementById('discount').value = discounts.join(' / ');
+        } else {
+            document.getElementById('amount').value = '';
+            document.getElementById('discount').value = '';
+        }
+    }
 
     function addTag(type) {
         const sel = document.getElementById(type + 'Select');
@@ -816,7 +871,7 @@
         const r = row.cells;
         document.getElementById('detCustomer').innerText = r[1].innerText;
         document.getElementById('detPeriod').innerText = r[2].innerText;
-        document.getElementById('detTier').innerText = r[3].innerText;
+        document.getElementById('detTier').innerText = r[3].innerText; // 구간(A / B) 모두 포함됨
         document.getElementById('detDiscount').innerText = r[4].innerText;
         document.getElementById('detManager').innerText = "담당: " + r[5].innerText;
         document.getElementById('detDesignated').innerText = r[6].innerText || '없음';
@@ -835,7 +890,16 @@
         row.setAttribute('data-sig', currentSignatureData);
         row.ondblclick = function() { showDetailPopup(this); }; 
         const hasSig = currentSignatureData ? "⭕" : "❌";
-        row.innerHTML = `<td><input type="radio" name="rowSelect" checked></td><td>${cust}</td><td>${document.getElementById('period').value}</td><td>${document.getElementById('tier').value}</td><td>${document.getElementById('discount').value}%</td><td>${document.getElementById('manager').value}</td><td>${selectedDesignated.join(', ')}</td><td>${selectedExcluded.join(', ')}</td><td>${document.getElementById('evalPeriod').value}</td><td>${document.getElementById('bizNo').value}</td><td>${document.getElementById('clientRep').value}</td><td>${document.getElementById('clientAddr').value}</td><td>${hasSig}</td>`;
+        
+        // A와 B 구간 텍스트 결합 로직
+        const tierA = document.getElementById('tierA').value;
+        const tierB = document.getElementById('tierB').value;
+        const tierDisplay = [tierA, tierB].filter(Boolean).join(' / ');
+        
+        let discountDisplay = document.getElementById('discount').value;
+        if (discountDisplay && !discountDisplay.includes('%')) discountDisplay += '%';
+
+        row.innerHTML = `<td><input type="radio" name="rowSelect" checked></td><td>${cust}</td><td>${document.getElementById('period').value}</td><td>${tierDisplay}</td><td>${discountDisplay}</td><td>${document.getElementById('manager').value}</td><td>${selectedDesignated.join(', ')}</td><td>${selectedExcluded.join(', ')}</td><td>${document.getElementById('evalPeriod').value}</td><td>${document.getElementById('bizNo').value}</td><td>${document.getElementById('clientRep').value}</td><td>${document.getElementById('clientAddr').value}</td><td>${hasSig}</td>`;
         currentSignatureData = ''; document.getElementById('sigPreview').innerHTML = `<span style="color:#aaa; font-size:12px;">서명 없음</span>`;
     }
 
@@ -853,7 +917,14 @@
             d = { cust:c[1].innerText, period:c[2].innerText, tier:c[3].innerText, discount:c[4].innerText, amount:r.getAttribute('data-raw-amt'), designated:c[6].innerText, excluded:c[7].innerText, evalPeriod:c[8].innerText, bizNo:c[9].innerText, clientRep:c[10].innerText, clientAddr:c[11].innerText, notes:r.getAttribute('data-notes'), sig:r.getAttribute('data-sig') };
         } else {
             const dc = document.getElementById('discount').value;
-            d = { cust:document.getElementById('customer').value, period:document.getElementById('period').value, tier:document.getElementById('tier').value, discount: dc?dc+'%':'', amount:unformatNumber(document.getElementById('amount').value), designated:selectedDesignated.join(', '), excluded:selectedExcluded.join(', '), evalPeriod:document.getElementById('evalPeriod').value, bizNo:document.getElementById('bizNo').value, clientRep:document.getElementById('clientRep').value, clientAddr:document.getElementById('clientAddr').value, notes:document.getElementById('notes').value, sig:currentSignatureData };
+            const tierA = document.getElementById('tierA').value;
+            const tierB = document.getElementById('tierB').value;
+            const tierDisplay = [tierA, tierB].filter(Boolean).join(' / ');
+            
+            let finalDiscount = dc;
+            if (finalDiscount && !finalDiscount.includes('%')) finalDiscount += '%';
+
+            d = { cust:document.getElementById('customer').value, period:document.getElementById('period').value, tier:tierDisplay, discount: finalDiscount, amount:unformatNumber(document.getElementById('amount').value), designated:selectedDesignated.join(', '), excluded:selectedExcluded.join(', '), evalPeriod:document.getElementById('evalPeriod').value, bizNo:document.getElementById('bizNo').value, clientRep:document.getElementById('clientRep').value, clientAddr:document.getElementById('clientAddr').value, notes:document.getElementById('notes').value, sig:currentSignatureData };
         }
         
         const DEFAULT_NOTE = '본 약정의 약정금액(목표)는 각각의 브랜드를 기준으로 설정 브랜드별 실적을 평가한다.\n지정브랜드는 약정당 최대 2개까지 지정가능하며 약정금액또한 지정브랜드 실적의 합산으로 평가 한다.';
@@ -912,14 +983,19 @@
     }
 
     function updateAllSelects() {
-        // designatedSelect는 검색입력창으로 대체되었으므로 맵에서 제외
         const map = { period: 'period', excluded: 'excludedSelect', manager: 'manager', evalPeriod: 'evalPeriod' };
         for(let k in map) {
             const sel = document.getElementById(map[k]);
             if(sel) sel.innerHTML = `<option value="">선택하세요</option>` + (masterData[k] || []).map(v => `<option value="${v}">${v}</option>`).join('');
         }
-        const tierSel = document.getElementById('tier');
-        tierSel.innerHTML = `<option value="">구간 선택</option>` + Object.keys(masterData.tier).map(k => `<option value="${k}">${k}</option>`).join('');
+        
+        // A, B 약정구간 옵션 갱신
+        const tierSelA = document.getElementById('tierA');
+        const tierSelB = document.getElementById('tierB');
+        const tierOpts = `<option value="">구간 선택</option>` + Object.keys(masterData.tier).map(k => `<option value="${k}">${k}</option>`).join('');
+        
+        if(tierSelA) tierSelA.innerHTML = tierOpts;
+        if(tierSelB) tierSelB.innerHTML = tierOpts;
     }
 
     function openSurchargeModal() {
