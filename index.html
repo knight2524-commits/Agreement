@@ -172,7 +172,7 @@
                             <input type="text" id="customer" placeholder="업체명 또는 거래처코드 검색" autocomplete="off">
                             <div id="customerDropdown" class="autocomplete-list"></div>
                         </div>
-                        <button class="public-plus" onclick="openCustomerModal()">+</button>
+                        <button class="public-plus" onclick="openBaseModal('customer', '업체명')">+</button>
                     </div>
                 </div>
                 <div class="input-group">
@@ -183,47 +183,26 @@
                     </div>
                 </div>
             </div>
-            
             <div class="form-row">
                 <div class="input-group">
-                    <label>약정구간(A)</label>
+                    <label>약정구간</label>
                     <div class="input-wrapper">
-                        <select id="tierA" onchange="applyTierData()"><option value="">선택하세요</option></select>
+                        <select id="tier" onchange="applyTierData()"><option value="">선택하세요</option></select>
                         <button class="admin-plus" onclick="openTierModal()">+</button>
                     </div>
                 </div>
                 <div class="input-group">
-                    <label>지정브랜드(A)</label>
+                    <label>지정브랜드</label>
                     <div class="input-wrapper">
+                        <!-- 검색 가능한 브랜드 입력창 적용 -->
                         <div class="autocomplete-wrapper" style="flex:1;">
-                            <input type="text" id="designatedInputA" placeholder="브랜드 검색 및 선택" autocomplete="off">
-                            <div id="designatedDropdownA" class="autocomplete-list"></div>
+                            <input type="text" id="designatedInput" placeholder="브랜드 검색 및 선택" autocomplete="off">
+                            <div id="designatedDropdown" class="autocomplete-list"></div>
                         </div>
                         <button class="admin-plus" onclick="openBaseModal('designated', '지정브랜드')">+</button>
                     </div>
                 </div>
             </div>
-
-            <div class="form-row">
-                <div class="input-group">
-                    <label>약정구간(B)</label>
-                    <div class="input-wrapper">
-                        <select id="tierB" onchange="applyTierData()"><option value="">선택하세요</option></select>
-                        <button class="admin-plus" onclick="openTierModal()">+</button>
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label>지정브랜드(B)</label>
-                    <div class="input-wrapper">
-                        <div class="autocomplete-wrapper" style="flex:1;">
-                            <input type="text" id="designatedInputB" placeholder="브랜드 검색 및 선택" autocomplete="off">
-                            <div id="designatedDropdownB" class="autocomplete-list"></div>
-                        </div>
-                        <button class="admin-plus" onclick="openBaseModal('designated', '지정브랜드')">+</button>
-                    </div>
-                </div>
-            </div>
-
             <div class="form-row">
                 <div class="input-group">
                     <label>약정금액(원)</label>
@@ -392,12 +371,8 @@
 
 <div id="deleteConfirmModal" class="modal-overlay"><div class="modal-content" style="width:340px; text-align:center;"><h3>삭제 확인</h3><p>선택하신 내역을 정말로 삭제하시겠습니까?</p><div style="display:flex; gap:10px; justify-content:center;"><button onclick="closeModal('deleteConfirmModal')" style="padding:8px 20px; background:#757575; color:white; border:none; border-radius:5px;">닫기</button><button onclick="deleteSelectedRow()" style="padding:8px 20px; background:#d32f2f; color:white; border:none; border-radius:5px;">삭제</button></div></div></div>
 <div id="sigModal" class="modal-overlay"><div class="modal-content" style="width:410px; text-align:center;"><h3>✍️ 서명 패드</h3><canvas id="sigCanvas" width="360" height="180"></canvas><div style="display:flex; gap:10px; justify-content:center; margin-top:10px;"><button onclick="clearSigCanvas()" style="padding:8px 15px; background:#ef5350; color:white; border:none; border-radius:5px;">지우기</button><button onclick="closeModal('sigModal')" style="padding:8px 15px; background:#78909c; color:white; border:none; border-radius:5px;">취소</button><button onclick="saveSignature()" style="padding:8px 15px; background:#2e7d32; color:white; border:none; border-radius:5px;">완료</button></div></div></div>
-
 <div id="baseModal" class="modal-overlay"><div class="modal-content"><h3 id="baseModalTitle">항목 추가</h3><input type="text" id="baseModalInput"><div id="baseModalList" class="manage-list"></div><div style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;"><button onclick="closeModal('baseModal')">취소</button><button onclick="saveBaseModal()" style="background:#2e7d32; color:white; border:none; padding:8px 15px; border-radius:5px;">저장</button></div></div></div>
-
-<div id="tierModal" class="modal-overlay"><div class="modal-content"><h3>약정구간 설정</h3><input type="text" id="newTierName" placeholder="구간명 (예: S)"><input type="text" id="newTierAmount" placeholder="금액" oninput="this.value = formatNumber(unformatNumber(this.value))"><input type="text" id="newTierDiscount" placeholder="할인율 (%)"><div id="tierModalList" class="manage-list"></div><div style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;"><button onclick="closeModal('tierModal')">취소</button><button onclick="saveTierModal()" style="background:#2e7d32; color:white; border:none; padding:8px 15px; border-radius:5px;">저장</button></div></div></div>
-
-<div id="customerModal" class="modal-overlay"><div class="modal-content"><h3>업체 수동 추가/삭제</h3><div style="display:flex; flex-direction:column; gap:8px;"><input type="text" id="newCustName" placeholder="업체명 (필수)"><input type="text" id="newCustCode" placeholder="거래처코드"><input type="text" id="newCustBizNo" placeholder="사업자번호"><input type="text" id="newCustRep" placeholder="대표자"><input type="text" id="newCustAddr" placeholder="주소"></div><div id="customerModalList" class="manage-list"></div><div style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;"><button onclick="closeModal('customerModal')">취소</button><button onclick="saveCustomerModal()" style="background:#2e7d32; color:white; border:none; padding:8px 15px; border-radius:5px;">저장</button></div></div></div>
+<div id="tierModal" class="modal-overlay"><div class="modal-content"><h3>약정구간 설정</h3><input type="text" id="newTierName" placeholder="구간명"><input type="text" id="newTierAmount" placeholder="금액" oninput="this.value = formatNumber(unformatNumber(this.value))"><input type="text" id="newTierDiscount" placeholder="할인율 (%)"><div style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;"><button onclick="closeModal('tierModal')">취소</button><button onclick="saveTierModal()" style="background:#2e7d32; color:white; border:none; padding:8px 15px; border-radius:5px;">저장</button></div></div></div>
 
 <div id="surchargeModal" class="modal-overlay">
     <div class="modal-content" style="width: 350px;">
@@ -540,8 +515,6 @@
         if(userBtn) userBtn.style.display = isLoggedIn ? 'inline-block' : 'none';
 
         if (document.getElementById('baseModal').style.display === 'flex') renderBaseModalList();
-        if (document.getElementById('tierModal').style.display === 'flex') renderTierList();
-        if (document.getElementById('customerModal').style.display === 'flex') renderCustomerList();
     }
 
     function initCustomerDB() {
@@ -660,19 +633,14 @@
         }
     });
 
-    // === 지정브랜드(A), (B) 드롭다운 이벤트 연동 ===
-    ['A', 'B'].forEach(type => {
-        const input = document.getElementById('designatedInput' + type);
-        if(input) {
-            input.addEventListener('focus', function() { renderDesignatedDropdown(this, 'designatedDropdown' + type); });
-            input.addEventListener('input', function() { renderDesignatedDropdown(this, 'designatedDropdown' + type); });
-        }
-    });
+    // === 지정브랜드 드롭다운 (검색 지원) ===
+    document.getElementById('designatedInput').addEventListener('focus', function() { renderDesignatedDropdown(this.value); });
+    document.getElementById('designatedInput').addEventListener('input', function() { renderDesignatedDropdown(this.value); });
 
-    function renderDesignatedDropdown(inputElem, dropdownId) {
-        const dropdown = document.getElementById(dropdownId);
+    function renderDesignatedDropdown(val) {
+        const dropdown = document.getElementById('designatedDropdown');
         dropdown.innerHTML = '';
-        let val = inputElem.value.trim().toLowerCase();
+        val = val.trim().toLowerCase();
 
         let matched = masterData.designated || [];
         if(val) { matched = matched.filter(b => b.toLowerCase().includes(val)); }
@@ -683,7 +651,7 @@
                 div.className = 'autocomplete-item';
                 div.innerHTML = `<strong>${b}</strong>`;
                 div.onclick = function() {
-                    inputElem.value = ''; 
+                    document.getElementById('designatedInput').value = ''; 
                     dropdown.style.display = 'none';
                     if(!selectedDesignated.includes(b)) {
                         selectedDesignated.push(b);
@@ -704,11 +672,9 @@
             const cd = document.getElementById('customerDropdown');
             if(cd) cd.style.display = 'none';
         }
-        if(!e.target.id.startsWith('designatedInput')) {
-            const dda = document.getElementById('designatedDropdownA');
-            const ddb = document.getElementById('designatedDropdownB');
-            if(dda) dda.style.display = 'none';
-            if(ddb) ddb.style.display = 'none';
+        if(e.target.id !== 'designatedInput') {
+            const dd = document.getElementById('designatedDropdown');
+            if(dd) dd.style.display = 'none';
         }
     });
 
@@ -763,10 +729,9 @@
     function clearSigCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
     function saveSignature() { currentSignatureData = canvas.toDataURL(); document.getElementById('sigPreview').innerHTML = `<img src="${currentSignatureData}">`; closeModal('sigModal'); }
 
-    // === 기본 항목(모달) 추가 및 삭제 (기간, 브랜드, 품목 등) ===
     function openBaseModal(target, title) {
         currentModalTarget = target;
-        document.getElementById('baseModalTitle').innerText = `[${title}] 추가/삭제`;
+        document.getElementById('baseModalTitle').innerText = `[${title}] 추가`;
         document.getElementById('baseModalInput').value = '';
         renderBaseModalList();
         document.getElementById('baseModal').style.display = 'flex';
@@ -781,11 +746,31 @@
         const rows = d.querySelectorAll('.mm-row'); items.forEach((v,i)=>rows[i].querySelector('span').textContent = v);
         d.querySelectorAll('.mm-del').forEach(b=>b.onclick=()=>deleteMasterItem(currentModalTarget, parseInt(b.dataset.i)));
     }
+    function deleteMasterItem(target, index) {
+        const items = masterData[target] || []; const name = items[index];
+        if (!confirm(`'${name}' 항목을 삭제하시겠습니까?`)) return;
+        items.splice(index, 1);
+        updateAllSelects();
+        renderBaseModalList();
+    }
+
+    function openTierModal() {
+        document.getElementById('newTierName').value = '';
+        document.getElementById('newTierAmount').value = '';
+        document.getElementById('newTierDiscount').value = '';
+        document.getElementById('tierModal').style.display = 'flex';
+    }
+
+    function openSigModal() { clearSigCanvas(); document.getElementById('sigModal').style.display = 'flex'; }
+    function openDeleteModal() { if(!document.querySelector('input[name="rowSelect"]:checked')) return alert('삭제할 항목을 선택해 주세요.'); document.getElementById('deleteConfirmModal').style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
     function saveBaseModal() {
         const val = document.getElementById('baseModalInput').value.trim(); if(!val) return;
         
         let selectId = currentModalTarget;
-        if(currentModalTarget === 'excluded') selectId = 'excludedSelect';
+        if(currentModalTarget === 'designated') selectId = 'designatedInput';
+        else if(currentModalTarget === 'excluded') selectId = 'excludedSelect';
         
         if(!masterData[currentModalTarget].includes(val)) {
             masterData[currentModalTarget].push(val);
@@ -803,115 +788,16 @@
                     selectedExcluded.push(val); renderTags('excluded');
                 }
             }
-            saveLocal(collectSettings()); // 로컬 저장 추가
         }
         closeModal('baseModal');
     }
-    function deleteMasterItem(target, index) {
-        const items = masterData[target] || []; const name = items[index];
-        if (!confirm(`'${name}' 항목을 삭제하시겠습니까?`)) return;
-        items.splice(index, 1);
-        updateAllSelects();
-        renderBaseModalList();
-        saveLocal(collectSettings()); // 로컬 저장 추가
-    }
 
-    // === 업체명 수동 추가/삭제 모달 ===
-    function openCustomerModal() {
-        document.getElementById('newCustName').value = '';
-        document.getElementById('newCustCode').value = '';
-        document.getElementById('newCustBizNo').value = '';
-        document.getElementById('newCustRep').value = '';
-        document.getElementById('newCustAddr').value = '';
-        renderCustomerList();
-        document.getElementById('customerModal').style.display = 'flex';
-    }
-    function renderCustomerList() {
-        const d = document.getElementById('customerModalList');
-        if (!isLoggedIn) { d.style.display = 'none'; return; }
-        d.style.display = 'block';
-        if (!customerDB || !customerDB.length) { d.innerHTML = '<div class="mm-empty">등록된 업체가 없습니다.</div>'; return; }
-        d.innerHTML = '<div class="mm-head">등록 항목 (× 클릭 시 삭제)</div>' + customerDB.map((c, i) => `<div class="mm-row"><span>${c.company}</span><button class="mm-del" onclick="deleteCustomerItem(${i})">×</button></div>`).join('');
-    }
-    function saveCustomerModal() {
-        const company = document.getElementById('newCustName').value.trim();
-        if(!company) return alert('업체명을 입력해주세요.');
-        const code = document.getElementById('newCustCode').value.trim();
-        const bizNo = document.getElementById('newCustBizNo').value.trim();
-        const rep = document.getElementById('newCustRep').value.trim();
-        const address = document.getElementById('newCustAddr').value.trim();
-        
-        customerDB.push({ code, company, rep, bizNo, address });
-        localStorage.setItem('kb1_customer_db', JSON.stringify(customerDB));
-        closeModal('customerModal');
-    }
-    function deleteCustomerItem(index) {
-        if(!confirm(`'${customerDB[index].company}' 업체를 삭제하시겠습니까?`)) return;
-        customerDB.splice(index, 1);
-        localStorage.setItem('kb1_customer_db', JSON.stringify(customerDB));
-        renderCustomerList();
-    }
-
-    // === 약정구간 추가/삭제 모달 ===
-    function openTierModal() {
-        document.getElementById('newTierName').value = '';
-        document.getElementById('newTierAmount').value = '';
-        document.getElementById('newTierDiscount').value = '';
-        renderTierList();
-        document.getElementById('tierModal').style.display = 'flex';
-    }
-    function renderTierList() {
-        const d = document.getElementById('tierModalList');
-        if (!isLoggedIn) { d.style.display = 'none'; return; }
-        d.style.display = 'block';
-        const keys = Object.keys(masterData.tier);
-        if (!keys.length) { d.innerHTML = '<div class="mm-empty">등록된 항목이 없습니다.</div>'; return; }
-        d.innerHTML = '<div class="mm-head">등록 항목 (× 클릭 시 삭제)</div>' + keys.map(k => `<div class="mm-row"><span>${k} (${masterData.tier[k].discount}%)</span><button class="mm-del" onclick="deleteTierItem('${k}')">×</button></div>`).join('');
-    }
     function saveTierModal() {
-        const name = document.getElementById('newTierName').value.trim(); 
-        const amt = unformatNumber(document.getElementById('newTierAmount').value.trim()); 
-        const dc = document.getElementById('newTierDiscount').value.trim();
-        if(name) { 
-            masterData.tier[name] = { amount: amt, discount: dc }; 
-            updateAllSelects(); 
-            document.getElementById('tierA').value = name; 
-            applyTierData(); 
-            saveLocal(collectSettings()); // 로컬 저장 추가
-            closeModal('tierModal'); 
-        }
+        const name = document.getElementById('newTierName').value.trim(); const amt = unformatNumber(document.getElementById('newTierAmount').value.trim()); const dc = document.getElementById('newTierDiscount').value.trim();
+        if(name) { masterData.tier[name] = { amount: amt, discount: dc }; const sel = document.getElementById('tier'); const opt = document.createElement('option'); opt.value = name; opt.text = name; sel.add(opt); sel.value = name; applyTierData(); closeModal('tierModal'); }
     }
-    function deleteTierItem(key) {
-        if (!confirm(`'${key}' 구간을 삭제하시겠습니까?`)) return;
-        delete masterData.tier[key];
-        updateAllSelects();
-        renderTierList();
-        saveLocal(collectSettings()); // 로컬 저장 추가
-    }
-
-    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
     
-    // === 약정구간(A), (B) 선택 시 금액 합산 및 할인율 통합 표시 ===
-    function applyTierData() { 
-        let totalAmt = 0;
-        let discounts = [];
-        
-        const tierA = document.getElementById('tierA').value;
-        const tA = masterData.tier[tierA];
-        if(tA) { totalAmt += parseInt(tA.amount || 0); discounts.push(tA.discount + '%'); }
-        
-        const tierB = document.getElementById('tierB').value;
-        const tB = masterData.tier[tierB];
-        if(tB) { totalAmt += parseInt(tB.amount || 0); discounts.push(tB.discount + '%'); }
-        
-        if(tA || tB) {
-            document.getElementById('amount').value = formatNumber(totalAmt);
-            document.getElementById('discount').value = discounts.join(' / ');
-        } else {
-            document.getElementById('amount').value = '';
-            document.getElementById('discount').value = '';
-        }
-    }
+    function applyTierData() { const t = masterData.tier[document.getElementById('tier').value]; if(t) { document.getElementById('amount').value = formatNumber(t.amount); document.getElementById('discount').value = t.discount; } }
 
     function addTag(type) {
         const sel = document.getElementById(type + 'Select');
@@ -930,7 +816,7 @@
         const r = row.cells;
         document.getElementById('detCustomer').innerText = r[1].innerText;
         document.getElementById('detPeriod').innerText = r[2].innerText;
-        document.getElementById('detTier').innerText = r[3].innerText; // 구간(A / B) 모두 포함됨
+        document.getElementById('detTier').innerText = r[3].innerText;
         document.getElementById('detDiscount').innerText = r[4].innerText;
         document.getElementById('detManager').innerText = "담당: " + r[5].innerText;
         document.getElementById('detDesignated').innerText = r[6].innerText || '없음';
@@ -949,16 +835,7 @@
         row.setAttribute('data-sig', currentSignatureData);
         row.ondblclick = function() { showDetailPopup(this); }; 
         const hasSig = currentSignatureData ? "⭕" : "❌";
-        
-        // A와 B 구간 텍스트 결합 로직
-        const tierA = document.getElementById('tierA').value;
-        const tierB = document.getElementById('tierB').value;
-        const tierDisplay = [tierA, tierB].filter(Boolean).join(' / ');
-        
-        let discountDisplay = document.getElementById('discount').value;
-        if (discountDisplay && !discountDisplay.includes('%')) discountDisplay += '%';
-
-        row.innerHTML = `<td><input type="radio" name="rowSelect" checked></td><td>${cust}</td><td>${document.getElementById('period').value}</td><td>${tierDisplay}</td><td>${discountDisplay}</td><td>${document.getElementById('manager').value}</td><td>${selectedDesignated.join(', ')}</td><td>${selectedExcluded.join(', ')}</td><td>${document.getElementById('evalPeriod').value}</td><td>${document.getElementById('bizNo').value}</td><td>${document.getElementById('clientRep').value}</td><td>${document.getElementById('clientAddr').value}</td><td>${hasSig}</td>`;
+        row.innerHTML = `<td><input type="radio" name="rowSelect" checked></td><td>${cust}</td><td>${document.getElementById('period').value}</td><td>${document.getElementById('tier').value}</td><td>${document.getElementById('discount').value}%</td><td>${document.getElementById('manager').value}</td><td>${selectedDesignated.join(', ')}</td><td>${selectedExcluded.join(', ')}</td><td>${document.getElementById('evalPeriod').value}</td><td>${document.getElementById('bizNo').value}</td><td>${document.getElementById('clientRep').value}</td><td>${document.getElementById('clientAddr').value}</td><td>${hasSig}</td>`;
         currentSignatureData = ''; document.getElementById('sigPreview').innerHTML = `<span style="color:#aaa; font-size:12px;">서명 없음</span>`;
     }
 
@@ -976,14 +853,7 @@
             d = { cust:c[1].innerText, period:c[2].innerText, tier:c[3].innerText, discount:c[4].innerText, amount:r.getAttribute('data-raw-amt'), designated:c[6].innerText, excluded:c[7].innerText, evalPeriod:c[8].innerText, bizNo:c[9].innerText, clientRep:c[10].innerText, clientAddr:c[11].innerText, notes:r.getAttribute('data-notes'), sig:r.getAttribute('data-sig') };
         } else {
             const dc = document.getElementById('discount').value;
-            const tierA = document.getElementById('tierA').value;
-            const tierB = document.getElementById('tierB').value;
-            const tierDisplay = [tierA, tierB].filter(Boolean).join(' / ');
-            
-            let finalDiscount = dc;
-            if (finalDiscount && !finalDiscount.includes('%')) finalDiscount += '%';
-
-            d = { cust:document.getElementById('customer').value, period:document.getElementById('period').value, tier:tierDisplay, discount: finalDiscount, amount:unformatNumber(document.getElementById('amount').value), designated:selectedDesignated.join(', '), excluded:selectedExcluded.join(', '), evalPeriod:document.getElementById('evalPeriod').value, bizNo:document.getElementById('bizNo').value, clientRep:document.getElementById('clientRep').value, clientAddr:document.getElementById('clientAddr').value, notes:document.getElementById('notes').value, sig:currentSignatureData };
+            d = { cust:document.getElementById('customer').value, period:document.getElementById('period').value, tier:document.getElementById('tier').value, discount: dc?dc+'%':'', amount:unformatNumber(document.getElementById('amount').value), designated:selectedDesignated.join(', '), excluded:selectedExcluded.join(', '), evalPeriod:document.getElementById('evalPeriod').value, bizNo:document.getElementById('bizNo').value, clientRep:document.getElementById('clientRep').value, clientAddr:document.getElementById('clientAddr').value, notes:document.getElementById('notes').value, sig:currentSignatureData };
         }
         
         const DEFAULT_NOTE = '본 약정의 약정금액(목표)는 각각의 브랜드를 기준으로 설정 브랜드별 실적을 평가한다.\n지정브랜드는 약정당 최대 2개까지 지정가능하며 약정금액또한 지정브랜드 실적의 합산으로 평가 한다.';
@@ -1042,19 +912,14 @@
     }
 
     function updateAllSelects() {
+        // designatedSelect는 검색입력창으로 대체되었으므로 맵에서 제외
         const map = { period: 'period', excluded: 'excludedSelect', manager: 'manager', evalPeriod: 'evalPeriod' };
         for(let k in map) {
             const sel = document.getElementById(map[k]);
             if(sel) sel.innerHTML = `<option value="">선택하세요</option>` + (masterData[k] || []).map(v => `<option value="${v}">${v}</option>`).join('');
         }
-        
-        // A, B 약정구간 옵션 갱신
-        const tierSelA = document.getElementById('tierA');
-        const tierSelB = document.getElementById('tierB');
-        const tierOpts = `<option value="">구간 선택</option>` + Object.keys(masterData.tier).map(k => `<option value="${k}">${k}</option>`).join('');
-        
-        if(tierSelA) tierSelA.innerHTML = tierOpts;
-        if(tierSelB) tierSelB.innerHTML = tierOpts;
+        const tierSel = document.getElementById('tier');
+        tierSel.innerHTML = `<option value="">구간 선택</option>` + Object.keys(masterData.tier).map(k => `<option value="${k}">${k}</option>`).join('');
     }
 
     function openSurchargeModal() {
