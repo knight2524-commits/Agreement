@@ -218,7 +218,7 @@
                     <div class="input-wrapper"><input type="text" id="discount" placeholder="자동입력"></div>
                 </div>
                 <div class="input-group">
-                    <label>평가기간</label>
+                    <label>기간</label>
                     <div class="input-wrapper">
                         <select id="evalPeriod"><option value="">선택하세요</option></select>
                         <button class="admin-plus" onclick="openBaseModal('evalPeriod', '평가기간')">+</button>
@@ -823,7 +823,7 @@
             d = { cust:document.getElementById('customer').value, period:document.getElementById('period').value, tier:document.getElementById('tier').value, discount: dc?dc+'%':'', amount:unformatNumber(document.getElementById('amount').value), designated:selectedDesignated.join(', '), excluded:selectedExcluded.join(', '), evalPeriod:document.getElementById('evalPeriod').value, bizNo:document.getElementById('bizNo').value, clientRep:document.getElementById('clientRep').value, clientAddr:document.getElementById('clientAddr').value, notes:document.getElementById('notes').value, sig:currentSignatureData };
         }
         
-        const DEFAULT_NOTE = '본 약정의 약정금액(목표)는 약정설정 브랜드를 기준으로 실적을 평가한다.\n지정브랜드는 약정당 최대 2개까지 지정가능하며 약정금액또한 지정브랜드 실적의 합산으로 평가 한다.';
+        const DEFAULT_NOTE = '본 약정의 약정금액(목표)는 각각의 브랜드를 기준으로 설정 브랜드별 실적을 평가한다..\n지정브랜드는 약정당 최대 2개까지 지정가능하며 약정금액또한 지정브랜드 실적의 합산으로 평가 한다.';
         
         document.getElementById('pdfCustName').innerText = d.cust || '________';
         document.getElementById('pdfSignCustName').innerText = d.cust || '________';
